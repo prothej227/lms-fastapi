@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from app.database import Base
 from passlib.context import CryptContext
 
@@ -9,9 +9,12 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(80), unique=True, nullable=False)
+    first_name = Column(String(50), nullable=True)
+    last_name = Column(String(50), nullable=True)
     email = Column(String(120), unique=True, nullable=False)
     password_hash = Column(String(128))
     role = Column(String(50), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
 
     def set_password(self, password: str) -> None:
         self.password_hash = pwd_context.hash(password)
@@ -24,5 +27,6 @@ class User(Base):
             'id': self.id,
             'username': self.username,
             'email': self.email,
-            'role': self.role
+            'role': self.role,
+            'is_active': self.is_active
         }

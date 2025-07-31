@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from pydantic import field_validator
 import re
-
+from typing import Optional
 class UserBase(BaseModel):
     email: EmailStr = Field(..., example="john.doe@domain.com")
     username: str = Field(..., min_length=3, max_length=80, example="johndoe")
@@ -32,7 +32,8 @@ class UserView(BaseModel):
     email: EmailStr = Field(..., example="john.doe@domain.com")
     username: str = Field(..., min_length=3, max_length=80, example="johndoe")
     role: str = Field(..., example="admin")
-    is_active: bool = Field(..., example=True)
+    is_active: Optional[bool] = Field(None, example=True)
+    full_name: Optional[str] = Field(None, example="John Doe")
 
     class Config:
         from_attributes = True

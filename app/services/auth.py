@@ -9,7 +9,6 @@ from typing import Optional
 
 def create_access_token(data: dict, expires_delta: int = None) -> str:
         """ Create an access token for the user."""
-        # Implementation of token creation
         to_encode = data.copy()
         expire = datetime.now(timezone.utc) + timedelta(minutes=expires_delta) if expires_delta else None
         to_encode.update({"exp": expire})
@@ -123,7 +122,7 @@ async def get_user_by_username(db: UserRepository, username: str) -> User:
     """
     return await db.get_user_by_username(username)
 
-async def login_user(db: UserRepository, username: str, password: str) -> Optional[str]:
+async def login_user(db: UserRepository, username: str, password: str) -> Optional[dict]:
     """
     Authenticate a user by their username and password.
     
@@ -138,5 +137,18 @@ async def login_user(db: UserRepository, username: str, password: str) -> Option
     user = await db.authenticate_user(username, password)
     if not user:
         return None
-    access_token = create_access_token(data={"sub": user.username})
-    return access_token
+    access_token = create_access_token(
+        data={
+            "sub": user.username,
+            "id": user.id,
+            "email": user.email,
+            "role": user.role,
+            "is_active": user.is_active,
+            "full_name": f"{user.first_name} {user.last_name}" if user.first_name and user.last_name else None
+        },
+        expires_delta=60
+    )
+    return {
+         "user": user,
+         "access_token": access_token,
+    }

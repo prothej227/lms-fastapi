@@ -6,13 +6,14 @@ from app.services.auth import (
 )
 from app.repositories.user import UserRepository
 from app.models.user import User
-from app.schemas.user import UserBase, UserLogin
-from app.schemas.generic import GenericResponse
+from app.schemas.user import UserBase, UserLogin, UserView
+from app.schemas.generic import GenericResponse, LoginResponse
 from app.database import get_db
 from app.views import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import status, Response
-
+from fastapi import status, Response, Request
+from jose import jwt, JWTError
+from app.config import get_settings
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @auth_router.post("/register", response_model=GenericResponse)
@@ -48,12 +49,12 @@ async def register_user(
         message=f"User {user.username} created successfully",
     )
 
-@auth_router.post("/login", response_model=GenericResponse)
+@auth_router.post("/login", response_model=LoginResponse)
 async def authenticate_user(
     response: Response,
     user: UserLogin,
     db: AsyncSession = Depends(get_db),
-) -> GenericResponse:
+) -> dict:
     """
     Authenticate a user.
     
@@ -65,12 +66,14 @@ async def authenticate_user(
         User: The authenticated user object.
     """
     user_repo = UserRepository(db)
-    access_token: str = await login_user(user_repo, user.username, user.password)
-    if not access_token:
+    login_result = await login_user(user_repo, user.username, user.password)
+    if not login_result:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Invalid username or password"
         )
+    user = login_result.get("user")
+    access_token: str = login_result.get("access_token")
     response.set_cookie(
         key="access_token", 
         value=access_token, 
@@ -79,7 +82,55 @@ async def authenticate_user(
         samesite="lax",
         secure=False
     )
-    return GenericResponse(
-        status_code=status.HTTP_200_OK,
-        message=f"User {user.username} logged in successfully",
+    return LoginResponse(
+        message=f"User {user.username} authenticated successfully",
+        access_token=access_token,
+        user=UserView(
+            id=user.id,
+            email=user.email,
+            username=user.username,
+            role=user.role,
+            is_active=user.is_active,
+            full_name=f"{user.first_name} {user.last_name}" if user.first_name and user.last_name else None
+        )
+    )
+
+
+@auth_router.get("/me", response_model=LoginResponse)
+async def get_me(request: Request):
+    """
+    Get the currently authenticated user.
+    
+    Returns:
+        User: The authenticated user object.
+    """
+    # This function would typically extract the user from the request context
+    # or session, but for simplicity, we return a placeholder here.
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    try:
+        payload = jwt.decode(token=token,
+            key=get_settings().secret_key,
+            algorithms=[get_settings().algorithm]
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+    return LoginResponse(
+        message="User session is still active.",
+        access_token=token,
+        user=UserView(
+            id=payload.get("id"),
+            email=payload.get("email"),
+            username=payload.get("sub"),
+            role=payload.get("role"),
+            is_active=payload.get("is_active"),
+            full_name=payload.get("full_name")
+        )
     )
