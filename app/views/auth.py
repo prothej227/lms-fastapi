@@ -5,7 +5,6 @@ from app.services.auth import (
     update_user,
 )
 from app.repositories.user import UserRepository
-from app.models.user import User
 from app.schemas.user import UserBase, UserLogin, UserView
 from app.schemas.generic import GenericResponse, LoginResponse
 from app.database import get_db
