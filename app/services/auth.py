@@ -6,6 +6,8 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from app.config import get_settings
 from typing import Optional
+from fastapi import Request, HTTPException, status
+from app.schemas.user import UserView
 
 def create_access_token(data: dict, expires_delta: int = None) -> str:
         """ Create an access token for the user."""
@@ -152,3 +154,36 @@ async def login_user(db: UserRepository, username: str, password: str) -> Option
          "user": user,
          "access_token": access_token,
     }
+
+async def get_current_user(request: Request) -> UserView:
+    """
+    Get current user or session instance
+
+    Args:
+        request: The HTTP payload request
+    """
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+    try:
+        payload = jwt.decode(token=token,
+            key=get_settings().secret_key,
+            algorithms=[get_settings().algorithm]
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token"
+        )
+    return UserView(
+        id=payload.get("id"),
+        email=payload.get("email"),
+        username=payload.get("sub"),
+        role=payload.get("role"),
+        is_active=payload.get("is_active"),
+        full_name=payload.get("full_name")
+    )
+            

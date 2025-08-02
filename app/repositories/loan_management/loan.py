@@ -20,7 +20,7 @@ class LoanRepository:
         _result = await self.db.execute(
             select(Loan).filter(Loan.id==id)
         )
-        return _result.scalars().first()
+        return _result.scalar_one_or_none()
     
     async def get_all_loans(self) -> List[Loan]:
         _result = await self.db.execute(
@@ -45,31 +45,4 @@ class LoanRepository:
         except Exception:
             await self.db.rollback()
         return False
-        
-
-    async def create_loan_type(self, loan_type: LoanType) -> LoanType:
-        self.db.add(loan_type)
-        await self.db.commit()
-        await self.db.refresh(loan_type)
-        return loan_type
-
-    async def get_loan_type(self, name: str) -> LoanType:
-        return await self.db.query(LoanType).filter(LoanType.name==name).first()
-
-    async def create_loan_activity(self, activity: LoanActivity) -> LoanActivity:
-        self.db.add(activity)
-        await self.db.commit()
-        await self.db.refresh(activity)
-        return activity
-
-    async def get_loan_activity(self, activity_id: int) -> LoanActivity:
-        return await self.db.query(LoanActivity).filter(LoanActivity.id==activity_id).first()
-
-    async def create_loan_application(self, application: LoanApplication) -> LoanApplication:
-        self.db.add(application)
-        await self.db.commit()
-        await self.db.refresh(application)
-        return application
-
-    async def get_loan_application(self, application_id: int) -> LoanApplication:
-        return await self.db.query(LoanApplication).filter(LoanApplication.id == application_id).first()
+    

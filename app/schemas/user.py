@@ -8,6 +8,7 @@ class UserBase(BaseModel):
     username: str = Field(..., min_length=3, max_length=80, example="johndoe")
     role: str = Field(..., example="admin")  # e.g., "admin", "user", "manager"
     password: str = Field(..., min_length=8, example="strongpassword")
+    is_active: bool = Optional[Field(..., example="true")]
 
     @classmethod
     @field_validator('password')
