@@ -33,7 +33,7 @@ class Loan(Base):
     interest_rate = Column(Numeric(4, 2), nullable=False)
     start_date = Column(Date, nullable=False, default=date.today)
     end_date = Column(Date, nullable=False)
-    loan_type_name = Column(String(50), ForeignKey('loan_types.name'), nullable=False)
+    loan_type_id = Column(Integer, ForeignKey('loan_types.id'), nullable=False)
     status = Column(Integer, nullable=False, default=LoanStatus.FOR_APPROVAL)
     outstanding_balance = Column(Numeric(10, 2), nullable=False)
     total_interest = Column(Numeric(10, 2), nullable=False, default=0.00)
@@ -42,4 +42,5 @@ class Loan(Base):
 
     # Relationships (define related models separately)
     activities = relationship('LoanActivity', back_populates='loan')
-    loan_type = relationship('LoanType', back_populates='loans')   
+    loan_type = relationship('LoanType', back_populates='loans')
+    member = relationship('Member', back_populates="loans")

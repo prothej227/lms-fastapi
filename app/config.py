@@ -8,14 +8,11 @@ class Settings(BaseSettings):
     database_uri: str = "sqlite+aiosqlite:///./test.db"
     database_echo: bool = False
     database_connect_args: dict = {"check_same_thread": False}
-    middleware: object = {
-        "cors": {
-            "allow_origins": ["http://localhost:8080"],
-            "allow_credentials": True,
-            "allow_methods": ["*"],
-            "allow_headers": ["*"]
-        }
-    }
+    cors_allow_origins: list = ["http://localhost:3000"]
+    cors_allow_credentials: bool = True
+    cors_allow_methods: list = ["*"]
+    cors_allow_headers: list = ["*"]
+    
     model_config = SettingsConfigDict(env_file=".env")
 
 @lru_cache()

@@ -2,12 +2,15 @@ from pydantic import BaseModel, EmailStr, Field
 from pydantic import field_validator
 import re
 from typing import Optional
+
 class UserBase(BaseModel):
     email: EmailStr = Field(..., example="john.doe@domain.com")
     username: str = Field(..., min_length=3, max_length=80, example="johndoe")
     role: str = Field(..., example="admin")  # e.g., "admin", "user", "manager"
     password: str = Field(..., min_length=8, example="strongpassword")
+    is_active: bool = Optional[Field(..., example="true")]
 
+    @classmethod
     @field_validator('password')
     def validate_password(cls, v):
         if not re.search(r'[A-Z]', v):
