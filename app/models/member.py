@@ -2,8 +2,9 @@ from sqlalchemy import Column, Integer, String, Date
 from sqlalchemy.orm import relationship
 from app.database import Base
 
+
 class Member(Base):
-    __tablename__ = 'members'
+    __tablename__ = "members"
 
     id = Column(Integer, primary_key=True, index=True)
     first_name = Column(String(255))
@@ -30,5 +31,5 @@ class Member(Base):
     pos_grad_degree = Column(String(255))
     occupation = Column(String(10))
 
-    beneficiaries = relationship('Beneficiary', back_populates='member')
-    loans = relationship('Loan', back_populates='member')
+    beneficiaries = relationship("Beneficiary", back_populates="member")
+    loans = relationship("Loan", back_populates="member")
