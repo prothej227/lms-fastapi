@@ -4,6 +4,7 @@ from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+
 class User(Base):
     __tablename__ = "users"
 
@@ -20,13 +21,13 @@ class User(Base):
         self.password_hash = pwd_context.hash(password)
 
     def check_password(self, password: str) -> bool:
-        return pwd_context.verify(password, self.password_hash)
+        return pwd_context.verify(password, str(self.password_hash))
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'username': self.username,
-            'email': self.email,
-            'role': self.role,
-            'is_active': self.is_active
+            "id": self.id,
+            "username": self.username,
+            "email": self.email,
+            "role": self.role,
+            "is_active": self.is_active,
         }

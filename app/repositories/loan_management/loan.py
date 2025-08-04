@@ -1,10 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.loan import Loan
-from app.models.loan_type import LoanType
-from app.models.loan_activity import LoanActivity
-from app.models.loan_application import LoanApplication
 from sqlalchemy.future import select
 from typing import List, Optional
+
 
 class LoanRepository:
     def __init__(self, db: AsyncSession):
@@ -17,16 +15,16 @@ class LoanRepository:
         return loan
 
     async def get_loan_by_id(self, id: int) -> Optional[Loan]:
-        _result = await self.db.execute(
-            select(Loan).filter(Loan.id==id)
+        result = await self.db.execute(select(Loan).filter(Loan.id == id))
+        return result.scalar_one_or_none()
+
+    async def get_all_loans(
+        self, start_index: int = 1, batch_size: int = 1000
+    ) -> List[Loan]:
+        result = await self.db.execute(
+            select(Loan).offset(start_index).limit(batch_size)
         )
-        return _result.scalar_one_or_none()
-    
-    async def get_all_loans(self) -> List[Loan]:
-        _result = await self.db.execute(
-            select(Loan)
-        )
-        return list(_result.scalars().all())
+        return list(result.scalars().all())
 
     async def update_loan(self, loan: Loan) -> Optional[Loan]:
         merged = await self.db.merge(loan)
@@ -35,8 +33,8 @@ class LoanRepository:
         return merged
 
     async def delete_loan(self, id: int) -> bool:
-        try: 
-            loan: Loan = await self.get_loan(id)
+        try:
+            loan: Loan = await self.get_loan_by_id(id)
             if loan:
                 await self.db.delete(loan)
                 await self.db.commit()
@@ -45,4 +43,3 @@ class LoanRepository:
         except Exception:
             await self.db.rollback()
         return False
-    

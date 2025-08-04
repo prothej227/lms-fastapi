@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 
+
 class Settings(BaseSettings):
     secret_key: str = "thisisthesecretkey"
     algorithm: str = "HS256"
@@ -12,8 +13,9 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = True
     cors_allow_methods: list = ["*"]
     cors_allow_headers: list = ["*"]
-    
+
     model_config = SettingsConfigDict(env_file=".env")
+
 
 @lru_cache()
 def get_settings() -> Settings:

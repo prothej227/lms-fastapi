@@ -53,7 +53,7 @@ async def authenticate_user(
     response: Response,
     user: UserLogin,
     db: AsyncSession = Depends(get_db),
-) -> dict:
+) -> LoginResponse:
     """
     Authenticate a user.
     
@@ -71,8 +71,8 @@ async def authenticate_user(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Invalid username or password"
         )
-    user = login_result.get("user")
-    access_token: str = login_result.get("access_token")
+    user_data = login_result.get("user", dict())
+    access_token = login_result.get("access_token", "")
     response.set_cookie(
         key="access_token", 
         value=access_token, 
@@ -82,15 +82,15 @@ async def authenticate_user(
         secure=False
     )
     return LoginResponse(
-        message=f"User {user.username} authenticated successfully",
+        message=f"User {user_data.username} authenticated successfully",
         access_token=access_token,
         user=UserView(
-            id=user.id,
-            email=user.email,
-            username=user.username,
-            role=user.role,
-            is_active=user.is_active,
-            full_name=f"{user.first_name} {user.last_name}" if user.first_name and user.last_name else None
+            id=user_data.id,
+            email=user_data.email,
+            username=user_data.username,
+            role=user_data.role,
+            is_active=user_data.is_active,
+            full_name=f"{user_data.first_name} {user_data.last_name}" if user_data.first_name and user_data.last_name else None
         )
     )
 

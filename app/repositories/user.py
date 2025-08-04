@@ -29,7 +29,7 @@ class UserRepository:
         await self.db.refresh(user)
         return user
     
-    async def update_user(self, user_id: int, **kwargs) -> User:
+    async def update_user(self, user_id: int, **kwargs) -> Optional[User]:
         """ Update an existing user. """
         user: User = await self.get_user_by_id(user_id)
         if not user:
