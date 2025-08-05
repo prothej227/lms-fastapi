@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.views.auth import auth_router
 from app.views.root import router as root_router
 from app.views.loan_management import loan_router
-from app.config import get_settings
+from app.core.config import get_settings
 
 app = FastAPI()
 settings = get_settings()
