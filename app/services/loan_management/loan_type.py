@@ -30,4 +30,4 @@ async def get_all_loan_types(
     db: AsyncSession, start_index: int, page_size: int
 ) -> Optional[List[LoanType]]:
     loan_type_repo = LoanTypeRepository(db)
-    return await loan_type_repo.get_all(start_index, page_size)
+    return await loan_type_repo.get_all_denorm(start_index, page_size)

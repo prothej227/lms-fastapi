@@ -13,3 +13,4 @@ class LoanTypeRepository(AbstractAsyncRepository[LoanType]):
     @property
     def model(self) -> Type[LoanType]:
         return LoanType
+    
