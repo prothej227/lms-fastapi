@@ -36,14 +36,14 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         return result.scalar_one_or_none()
 
     async def get_all(
-        self, start_index: int = 0, batch_size: int = 5000
+        self, start_index: int, batch_size: int,
     ) -> List[RecordType]:
         result = await self.db.execute(
             select(self.model).offset(start_index).limit(batch_size)
         )
         return list(result.scalars().all())
     
-    async def get_all_denorm(self, start_index: int, page_size: int) -> List[RecordType]:
+    async def get_all_denorm(self, start_index: int, batch_size: int) -> List[RecordType]:
         result = await self.db.execute(
             select(self.model)
             .options(
@@ -51,7 +51,7 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
                 joinedload(self.model.modified_by),
             )
             .offset(start_index)
-            .limit(page_size)
+            .limit(batch_size)
         )
         return result.scalars().all()
     

@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean,DateTime
 from app.database import Base
 from passlib.context import CryptContext
-
+from datetime import datetime, timezone
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -16,6 +16,7 @@ class User(Base):
     password_hash = Column(String(128))
     role = Column(String(50), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    joined_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     def set_password(self, password: str) -> None:
         self.password_hash = pwd_context.hash(password)

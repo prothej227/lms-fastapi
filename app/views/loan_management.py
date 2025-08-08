@@ -5,7 +5,8 @@ from app.views import APIRouter, Depends, HTTPException
 from app.database import get_db
 from app.services.auth import get_current_user
 from app.schemas.user import UserView
-from typing import Optional, List
+from typing import List
+from app.core.config import get_settings
 from app.services.loan_management.loan_type import (
     create_loan_type,
     update_loan_type,
@@ -47,7 +48,7 @@ async def create_loan_type_endpoint(
 @loan_router.get("/get-all/loan-type", response_model=List[LoanTypeResponse])
 async def get_all_loan_types_endpoint(
     start_index: int = 0, 
-    batch_size: int = 1000,
+    batch_size: int = get_settings().sqlalchemy_default_batch_size,
     _current_user: UserView = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ) -> List[LoanTypeResponse]:

@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, String, Date, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from app.database import Base
-
+from datetime import datetime, timezone
 
 class Member(Base):
     __tablename__ = "members"
@@ -30,6 +30,12 @@ class Member(Base):
     college_degree = Column(String(255))
     pos_grad_degree = Column(String(255))
     occupation = Column(String(10))
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    modified_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    modified_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     beneficiaries = relationship("Beneficiary", back_populates="member")
     loans = relationship("Loan", back_populates="member")
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    modified_by = relationship("User", foreign_keys=[modified_by_id])

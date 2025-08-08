@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Numeric
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.database import Base
@@ -10,6 +10,7 @@ class LoanType(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
+    interest_rate = Column(Numeric(4, 2), nullable=False)
     description = Column(String(255), nullable=True)
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     modified_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)

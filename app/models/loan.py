@@ -1,8 +1,7 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, Date
-from sqlalchemy.orm import relationship
-from datetime import date
+from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, Date, DateTime
+from sqlalchemy.orm import relationship, Mapped
+from datetime import date, datetime, timezone
 from app.database import Base
-
 
 class LoanStatus:
     FOR_APPROVAL = 0
@@ -41,8 +40,14 @@ class Loan(Base):
     total_interest = Column(Numeric(10, 2), nullable=False, default=0.00)
     total_paid = Column(Numeric(10, 2), nullable=False, default=0.00)
     description = Column(String(255), nullable=True)
-
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    modified_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    modified_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     # Relationships (define related models separately)
-    activities = relationship("LoanActivity", back_populates="loan")
+    loan_activities = relationship("LoanActivity", back_populates="loan")
     loan_type = relationship("LoanType", back_populates="loans")
     member = relationship("Member", back_populates="loans")
+    
+    created_by = relationship("User", foreign_keys=[created_by_id])
+    modified_by = relationship("User", foreign_keys=[modified_by_id])

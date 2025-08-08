@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = True
     cors_allow_methods: list = ["*"]
     cors_allow_headers: list = ["*"]
-
+    sqlalchemy_default_batch_size: int = 500
     model_config = SettingsConfigDict(env_file=".env")
 
 
