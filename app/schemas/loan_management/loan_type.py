@@ -5,6 +5,7 @@ from app.models.loan_type import LoanType
 
 class LoanTypeBase(BaseModel):
     name: str = Field(..., max_length=50, description="Name of the loan type")
+    interest_rate: float = Field(..., description="Set interest rate")
     description: Optional[str] = Field(
         None, max_length=255, description="Description of the loan type"
     )
@@ -50,6 +51,7 @@ class LoanTypeResponse(LoanTypeBase):
         return cls(
             id=loan_type.id,
             name=loan_type.name,
+            interest_rate=loan_type.interest_rate,
             description=loan_type.description,
             created_by_name=f"{loan_type.created_by.first_name} {loan_type.created_by.last_name}" if loan_type.created_by else "",
             modified_by_name=f"{loan_type.modified_by.first_name} {loan_type.modified_by.last_name}" if loan_type.modified_by else None,

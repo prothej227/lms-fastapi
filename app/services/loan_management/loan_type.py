@@ -1,7 +1,7 @@
 from typing import List, Optional
 from app.repositories.loan_management.loan_type import LoanTypeRepository
 from app.models.loan_type import LoanType
-from app.schemas.loan_management import LoanTypeCreate, LoanTypeUpdate
+from app.schemas.loan_management.loan_type import LoanTypeCreate, LoanTypeUpdate
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
