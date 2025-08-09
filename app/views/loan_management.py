@@ -69,8 +69,28 @@ async def get_all_loan_types_endpoint(
     ]
 
 
-@loan_router.get("/create/loan", response_model=dict)
-def create_loan_endpoint() -> dict:
-    return {
-        "detail": "Soon!"
-    }
+@loan_router.post("/create/loan", response_model=schemas.loan.LoanView)
+async def create_loan_endpoint(
+    loan_data: schemas.loan.LoanCreate,
+    _current_user: UserView = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> schemas.loan.LoanView:
+
+    loan_data.created_by_id = _current_user.id if _current_user.id else -1
+    try:
+        loan = await services.loan.create_loan(loan_data, db)
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Loan with similar data already exists.",
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="A server error occured",
+        )
+    if not loan:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create loan."
+        )
+    return schemas.loan.LoanView.model_validate(loan)

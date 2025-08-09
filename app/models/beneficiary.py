@@ -1,17 +1,18 @@
-from sqlalchemy import Column, Integer, String, Date, ForeignKey
+from sqlalchemy import Integer, String, Date, ForeignKey
 from app.database import Base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, mapped_column, Mapped
+from datetime import date
 
 
 class Beneficiary(Base):
     __tablename__ = "beneficiaries"
 
-    id = Column(Integer, primary_key=True, index=True)
-    member_id = Column(Integer, ForeignKey("members.id"))
-    full_name = Column(String(255))
-    relationship_type = Column(String(255))
-    dob = Column(Date)
-    occupation = Column(String(255))
-    employer = Column(String(255))
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    member_id: Mapped[int] = mapped_column(Integer, ForeignKey("members.id"))
+    full_name: Mapped[int] = mapped_column(String(255))
+    relationship_type: Mapped[str] = mapped_column(String(255))
+    dob: Mapped[date] = mapped_column(Date)
+    occupation: Mapped[str] = mapped_column(String(255))
+    employer: Mapped[str] = mapped_column(String(255))
 
     member = relationship("Member", back_populates="beneficiaries")

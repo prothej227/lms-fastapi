@@ -5,6 +5,7 @@ from sqlalchemy.future import select
 from app.core.types import RecordType
 from sqlalchemy.orm import joinedload
 
+
 class AbstractAsyncRepository(ABC, Generic[RecordType]):
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -36,14 +37,18 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         return result.scalar_one_or_none()
 
     async def get_all(
-        self, start_index: int, batch_size: int,
+        self,
+        start_index: int,
+        batch_size: int,
     ) -> List[RecordType]:
         result = await self.db.execute(
             select(self.model).offset(start_index).limit(batch_size)
         )
         return list(result.scalars().all())
-    
-    async def get_all_denorm(self, start_index: int, batch_size: int) -> List[RecordType]:
+
+    async def get_all_denorm(
+        self, start_index: int, batch_size: int
+    ) -> List[RecordType]:
         result = await self.db.execute(
             select(self.model)
             .options(
@@ -53,8 +58,8 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
             .offset(start_index)
             .limit(batch_size)
         )
-        return result.scalars().all()
-    
+        return list(result.scalars().all())
+
     async def update(self, obj: RecordType) -> RecordType:
         merged = await self.db.merge(obj)
         await self.db.commit()
