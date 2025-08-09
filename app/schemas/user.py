@@ -11,6 +11,12 @@ class UserBase(BaseModel):
     username: str = Field(
         ..., min_length=3, max_length=80, example="johndoe"
     )  # pyright: ignore[reportCallIssue]
+    first_name: str = Field(
+        ..., min_length=2, max_length=80, example="John"
+    ) # pyright: ignore[reportCallIssue]
+    last_name: str = Field(
+        ..., min_length=2, max_length=80, example="Doe"
+    ) # pyright: ignore[reportCallIssue]
     role: str = Field(
         ..., example="admin"
     )  # e.g., "admin", "user", "manager" # pyright: ignore[reportCallIssue]

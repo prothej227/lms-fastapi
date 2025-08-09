@@ -1,22 +1,29 @@
-from sqlalchemy import Column, Integer, Numeric, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, Numeric, DateTime, ForeignKey
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 from datetime import datetime, timezone
 from app.database import Base
 from app.models.loan import LoanStatus
+from decimal import Decimal
 
 
 class LoanApplication(Base):
     __tablename__ = "loan_applications"
 
-    id = Column(Integer, primary_key=True, index=True)
-    member_id = Column(Integer, ForeignKey("members.id"), nullable=False)
-    loan_type_id = Column(Integer, ForeignKey("loan_types.id"), nullable=False)
-    amount_requested = Column(Numeric(10, 2), nullable=False)
-    application_date = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    member_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("members.id"), nullable=False
+    )
+    loan_type_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("loan_types.id"), nullable=False
+    )
+    amount_requested: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    application_date: Mapped[DateTime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )
-    status = Column(Integer, nullable=False, default=LoanStatus.FOR_APPROVAL)
-    loan_id = Column(Integer, ForeignKey("loans.id"), nullable=True)
+    status: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=LoanStatus.FOR_APPROVAL
+    )
+    loan_id: Mapped[int] = mapped_column(Integer, ForeignKey("loans.id"), nullable=True)
 
     member = relationship("Member")
     loan_type = relationship("LoanType")

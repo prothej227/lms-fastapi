@@ -1,27 +1,27 @@
-from sqlalchemy import Column, Integer, Numeric, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy import Integer, Numeric, String, DateTime, ForeignKey
+from sqlalchemy.orm import relationship, mapped_column, Mapped
 from datetime import datetime, timezone
 from app.database import Base
+from decimal import Decimal
 
 
 class LoanActivity(Base):
     __tablename__ = "loan_activities"
 
-    id = Column(Integer, primary_key=True, index=True)
-    loan_id = Column(Integer, ForeignKey("loans.id"), nullable=False)
-    activity_date = Column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    loan_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("loans.id"), nullable=False
     )
-    amount = Column(Numeric(10, 2), nullable=False)
-    activity_type = Column(
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    activity_type: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # e.g., 'Payment', 'Penalty', etc.
-    description = Column(String(255), nullable=True)
-    balance_after = Column(Numeric(10, 2), nullable=False)
-    recorded_by = Column(Integer, ForeignKey("users.id"), nullable=True)
-
-    loan = relationship("Loan", back_populates="activities")
-    user = relationship("User")
+    description: Mapped[str] = mapped_column(String(255), nullable=True)
+    balance_after: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    created_at: Mapped[DateTime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
+    loan = relationship("Loan", back_populates="loan_activities")
 
     def __repr__(self):
         return f"<LoanActivity {self.activity_type} on Loan {self.loan_id}>"

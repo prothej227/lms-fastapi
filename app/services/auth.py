@@ -51,7 +51,13 @@ async def create_user(db: UserRepository, user: UserBase) -> Optional[User]:
         User: The created user object.
     """
 
-    db_user = User(username=user.username, email=user.email, role=user.role)
+    db_user = User(
+        username=user.username,
+        first_name=user.first_name,
+        last_name=user.last_name,
+        email=user.email, 
+        role=user.role
+    )
     db_user.set_password(user.password)
     await db.create_user(db_user)
     return db_user
