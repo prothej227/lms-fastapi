@@ -1,13 +1,10 @@
-from typing import List, Optional
-from app.repositories.loan_management.loan_type import LoanTypeRepository
-from app.models.loan import Loan
-from app.schemas.loan_management.loan import LoanCreate, LoanView
+from app.services.crud import CrudService
+from app.schemas import loan_management as schemas
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.models import Loan
+from app.repositories.loan_management.loan import LoanRepository
 
 
-async def create_loan(
-    loan_create_data: LoanCreate, db: AsyncSession
-) -> Loan:
-    loan_type_repo = LoanTypeRepository(db)
-    loan_type = Loan(**loan_create_data.model_dump())
-    return await loan_type_repo.create(loan_type)
+class LoanService(CrudService[Loan, schemas.loan.LoanCreate, schemas.loan.LoanUpdate]):
+    def __init__(self, db: AsyncSession):
+        super().__init__(Loan, LoanRepository, db)

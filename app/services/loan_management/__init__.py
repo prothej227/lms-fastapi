@@ -1,5 +1,5 @@
-from . import loan_type
-from . import loan
-from . import loan_application
+from .loan_type import LoanTypeService
+from .loan import LoanService
+from .loan_application import LoanApplicationService
 
-__all__ = [loan_application, loan_type, loan]
+__all__ = ["LoanTypeService", "LoanService", "LoanApplicationService"]

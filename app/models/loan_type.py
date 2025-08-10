@@ -1,8 +1,10 @@
 from sqlalchemy import Integer, String, DateTime, ForeignKey, Numeric
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime, timezone
+from datetime import datetime
 from app.database import Base
 from typing import Optional
+from app.core.config import get_settings
+from zoneinfo import ZoneInfo
 
 
 class LoanType(Base):
@@ -15,10 +17,12 @@ class LoanType(Base):
     created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     modified_by_id: Mapped[Optional[int]] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime,
+        default=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
+        nullable=False,
     )
     modified_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime, onupdate=lambda: datetime.now(timezone.utc)
+        DateTime, onupdate=lambda: datetime.now(ZoneInfo(get_settings().timezone))
     )
 
     created_by = relationship("User", foreign_keys=[created_by_id])
