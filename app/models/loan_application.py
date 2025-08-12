@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from app.database import Base
 from app.models.loan import LoanStatus
 from decimal import Decimal
+from app.core.config import get_settings
+from zoneinfo import ZoneInfo
 
 
 class LoanApplication(Base):
@@ -18,7 +20,9 @@ class LoanApplication(Base):
     )
     amount_requested: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     application_date: Mapped[DateTime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime,
+        default=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
+        nullable=False,
     )
     status: Mapped[int] = mapped_column(
         Integer, nullable=False, default=LoanStatus.FOR_APPROVAL

@@ -62,7 +62,7 @@ async def get_all_loan_types_endpoint(
     service = services.LoanTypeService(db)
 
     try:
-        all_loan_types = await service.get_all(start_index, batch_size)
+        all_loan_types = await service.get_all_denorm(start_index, batch_size)
     except Exception as e:
         raise HTTPException(detail=str(e), status_code=status.HTTP_404_NOT_FOUND)
     if all_loan_types is None:
@@ -117,7 +117,7 @@ async def get_all_loans_endpoint(
     service = services.LoanService(db)
 
     try:
-        all_loans = await service.get_all(start_index, batch_size)
+        all_loans = await service.get_all_denorm(start_index, batch_size)
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -154,3 +154,35 @@ async def create_loan_application_endpoint(
             detail="No loan application created. Request error occured.",
         )
     return schemas.loan_application.LoanApplicationView.model_validate(loan_application)
+
+
+@loan_router.get(
+    "/get-all/loan-application",
+    response_model=List[schemas.loan_application.LoanApplicationView],
+)
+async def get_all_loan_applications_endpoint(
+    start_index: int = 0,
+    batch_size: int = get_settings().sqlalchemy_default_batch_size,
+    _current_user: UserView = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> List[schemas.loan_application.LoanApplicationView]:
+
+    service = services.LoanApplicationService(db)
+
+    try:
+        all_loans = await service.get_all(start_index, batch_size)
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="A server error occured.",
+        )
+
+    if all_loans is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch loans."
+        )
+    return [
+        schemas.loan_application.LoanApplicationView.model_validate(loan)
+        for loan in all_loans
+    ]

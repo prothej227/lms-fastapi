@@ -37,5 +37,10 @@ class CrudService(Generic[RecordType, CreateSchemaType, UpdateSchemaType]):
     async def get_by_field(self, field: str, value: Any) -> Optional[RecordType]:
         return await self.repo.get_by_field(field, value)
 
-    async def get_all(self, start_index: int, batch_size: int) -> List[RecordType]:
+    async def get_all_denorm(
+        self, start_index: int, batch_size: int
+    ) -> List[RecordType]:
         return await self.repo.get_all_denorm(start_index, batch_size)
+
+    async def get_all(self, start_index: int, batch_size: int) -> List[RecordType]:
+        return await self.repo.get_all(start_index, batch_size)

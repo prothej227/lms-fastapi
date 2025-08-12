@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     database_uri: str = "sqlite+aiosqlite:///./test.db"
     database_echo: bool = False
     database_connect_args: dict = {"check_same_thread": False}
-    cors_allow_origins: list = ["http://localhost:3000"]
+    cors_allow_origins: list = ["http://localhost:8080"]
     cors_allow_credentials: bool = True
     cors_allow_methods: list = ["*"]
     cors_allow_headers: list = ["*"]

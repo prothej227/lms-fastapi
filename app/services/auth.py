@@ -2,20 +2,22 @@ from app.repositories.user import UserRepository
 from app.models.user import User
 from app.schemas.user import UserBase
 from typing import Optional, Dict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from app.core.config import get_settings
 from typing import Optional, Any
 from fastapi import Request, HTTPException, status
 from app.schemas.user import UserView
 from app.core import messages
+from zoneinfo import ZoneInfo
 
 
 def create_access_token(data: Dict, expires_delta: int = 0) -> str:
     """Create an access token for the user."""
     to_encode = data.copy()
     expire = (
-        datetime.now(timezone.utc) + timedelta(minutes=expires_delta)
+        datetime.now(ZoneInfo(get_settings().timezone))
+        + timedelta(minutes=expires_delta)
         if expires_delta
         else None
     )
@@ -55,8 +57,8 @@ async def create_user(db: UserRepository, user: UserBase) -> Optional[User]:
         username=user.username,
         first_name=user.first_name,
         last_name=user.last_name,
-        email=user.email, 
-        role=user.role
+        email=user.email,
+        role=user.role,
     )
     db_user.set_password(user.password)
     await db.create_user(db_user)

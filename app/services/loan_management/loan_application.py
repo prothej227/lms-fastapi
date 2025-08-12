@@ -9,7 +9,7 @@ class LoanApplicationService(
     CrudService[
         LoanApplication,
         schemas.loan_application.LoanApplicationCreate,
-        schemas.loan_type.LoanTypeUpdate,
+        schemas.loan_application.LoanApplicationUpdate,
     ]
 ):
     def __init__(self, db: AsyncSession):
