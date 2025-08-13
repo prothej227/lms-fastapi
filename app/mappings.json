@@ -1,0 +1,13 @@
+{
+  "payment_frequency": {
+    "1": "monthly",
+    "2": "quarterly",
+    "3": "semi-annual",
+    "4": "annual"
+  },
+  "amortization_type": {
+    "1": "equal_installments",
+    "2": "reducing_balance",
+    "3": "bullet_payment"
+  }
+}

@@ -47,17 +47,27 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         return list(result.scalars().all())
 
     async def get_all_denorm(
-        self, start_index: int, batch_size: int
+        self,
+        start_index: int,
+        batch_size: int,
+        relationships: Optional[list[str]] = None,
     ) -> List[RecordType]:
-        result = await self.db.execute(
-            select(self.model)
-            .options(
-                joinedload(self.model.created_by),
-                joinedload(self.model.modified_by),
+        """Get all denormalized records from the defined relationships
+
+        Args:
+            start_index (int): Query starting index. Default: 0
+            batch_size (int): The number of data you want to obtain, or simply the page size.
+            relationships (List[str]): The relationship name e.g. ['created_by', 'modified_by']
+        """
+        query = select(self.model)
+
+        if relationships:
+            query = query.options(
+                *(joinedload(getattr(self.model, rel)) for rel in relationships)
             )
-            .offset(start_index)
-            .limit(batch_size)
-        )
+
+        result = await self.db.execute(query.offset(start_index).limit(batch_size))
+
         return list(result.scalars().all())
 
     async def update(self, obj: RecordType) -> RecordType:

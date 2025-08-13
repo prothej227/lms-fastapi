@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     sqlalchemy_default_batch_size: int = 500
     model_config = SettingsConfigDict(env_file=".env")
     timezone: str = "Asia/Manila"
+    ref_value_mappings_path: str = "./app/mappings.json"
 
 
 @lru_cache()

@@ -62,7 +62,9 @@ async def get_all_loan_types_endpoint(
     service = services.LoanTypeService(db)
 
     try:
-        all_loan_types = await service.get_all_denorm(start_index, batch_size)
+        all_loan_types = await service.get_all_denorm(
+            start_index, batch_size, relationships=["created_by", "modified_by"]
+        )
     except Exception as e:
         raise HTTPException(detail=str(e), status_code=status.HTTP_404_NOT_FOUND)
     if all_loan_types is None:
@@ -117,7 +119,9 @@ async def get_all_loans_endpoint(
     service = services.LoanService(db)
 
     try:
-        all_loans = await service.get_all_denorm(start_index, batch_size)
+        all_loans = await service.get_all_denorm(
+            start_index, batch_size, ["created_by", "modified_by", "loan_type"]
+        )
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -128,7 +132,7 @@ async def get_all_loans_endpoint(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch loans."
         )
-    return [schemas.loan.LoanView.model_validate(loan) for loan in all_loans]
+    return [schemas.loan.LoanView.from_orm_with_names(loan) for loan in all_loans]
 
 
 @loan_router.post(
@@ -171,8 +175,7 @@ async def get_all_loan_applications_endpoint(
 
     try:
         all_loans = await service.get_all(start_index, batch_size)
-    except Exception as e:
-        print(e)
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="A server error occured.",
