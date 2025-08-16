@@ -1,7 +1,11 @@
 from sqlalchemy import Integer, String, Date, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from app.database import Base
-from datetime import datetime, timezone, date
+from datetime import datetime, date
+from app.models.beneficiary import Beneficiary
+from typing import List
+from zoneinfo import ZoneInfo
+from app.core.config import get_settings
 
 
 class Member(Base):
@@ -35,16 +39,22 @@ class Member(Base):
         Integer, ForeignKey("users.id"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime,
+        default=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
+        nullable=False,
     )
     modified_by_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), nullable=False
     )
     modified_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime,
+        default=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
+        nullable=False,
     )
 
-    beneficiaries = relationship("Beneficiary", back_populates="member")
+    beneficiaries: Mapped[List[Beneficiary]] = relationship(
+        "Beneficiary", back_populates="member"
+    )
     loans = relationship("Loan", back_populates="member")
     created_by = relationship("User", foreign_keys=[created_by_id])
     modified_by = relationship("User", foreign_keys=[modified_by_id])

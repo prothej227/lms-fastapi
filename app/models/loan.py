@@ -4,6 +4,8 @@ from datetime import date, datetime, timezone
 from app.database import Base
 from typing import Optional
 from decimal import Decimal
+from zoneinfo import ZoneInfo
+from app.core.config import get_settings
 
 
 class LoanStatus:
@@ -53,11 +55,15 @@ class Loan(Base):
     description: Mapped[Optional[str]] = mapped_column(String(255))
     created_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime,
+        default=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
+        nullable=False,
     )
     modified_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
     modified_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime,
+        default=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
+        nullable=False,
     )
 
     # Relationships

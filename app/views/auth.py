@@ -71,7 +71,7 @@ async def authenticate_user(
     if not login_result:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid username or password",
+            detail="Unauthorized account or invalid credentials.",
         )
     user_data = login_result.get("user", dict())
     access_token = login_result.get("access_token", "")
@@ -139,3 +139,17 @@ async def get_me(request: Request):
             full_name=payload.get("full_name"),
         ),
     )
+
+
+@auth_router.post("/logout")
+async def logout(response: Response):
+    """
+    Logs out the user by clearing the access token cookie.
+    """
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        samesite="lax",
+        secure=False,
+    )
+    return {"message": "Logged out successfully"}

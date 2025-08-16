@@ -5,3 +5,4 @@ from .loan_activity import LoanActivity
 from .loan_application import LoanApplication
 from .member import Member
 from .user import User
+from .beneficiary import Beneficiary

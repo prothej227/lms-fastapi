@@ -9,12 +9,14 @@ class Settings(BaseSettings):
     database_uri: str = "sqlite+aiosqlite:///./test.db"
     database_echo: bool = False
     database_connect_args: dict = {"check_same_thread": False}
-    cors_allow_origins: list = ["http://localhost:3000"]
+    cors_allow_origins: list = ["http://localhost:8080"]
     cors_allow_credentials: bool = True
     cors_allow_methods: list = ["*"]
     cors_allow_headers: list = ["*"]
     sqlalchemy_default_batch_size: int = 500
     model_config = SettingsConfigDict(env_file=".env")
+    timezone: str = "Asia/Manila"
+    ref_value_mappings_path: str = "./app/mappings.json"
 
 
 @lru_cache()

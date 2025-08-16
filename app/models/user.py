@@ -3,6 +3,8 @@ from app.database import Base
 from passlib.context import CryptContext
 from datetime import datetime, timezone
 from sqlalchemy.orm import mapped_column, Mapped
+from app.core.config import get_settings
+from zoneinfo import ZoneInfo
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -19,7 +21,9 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(50), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     joined_at: Mapped[DateTime] = mapped_column(
-        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime,
+        default=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
+        nullable=False,
     )
 
     def set_password(self, password: str) -> None:
