@@ -14,9 +14,7 @@ class LoanApplicationBase(BaseModel):
     application_date: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
     )
-    status: int = Field(
-        ..., examples=[LoanStatus.FOR_APPROVAL]
-    )  # Could be replaced with Enum for LoanStatus
+    status: int = Field(..., examples=[LoanStatus.FOR_APPROVAL])
 
 
 class LoanApplicationCreate(LoanApplicationBase):

@@ -1,4 +1,4 @@
-from typing import Type, Generic, List, Optional, Any
+from typing import Type, Generic, List, Optional, Any, Union, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.abstract import AbstractAsyncRepository
 from app.core.types import RecordType, CreateSchemaType, UpdateSchemaType
@@ -38,9 +38,15 @@ class CrudService(Generic[RecordType, CreateSchemaType, UpdateSchemaType]):
         return await self.repo.get_by_field(field, value)
 
     async def get_all_denorm(
-        self, start_index: int, batch_size: int, relationships: Optional[List[str]]
-    ) -> List[RecordType]:
-        return await self.repo.get_all_denorm(start_index, batch_size, relationships)
+        self,
+        start_index: int,
+        batch_size: int,
+        field_names: Optional[List[str]] = None,
+        relationships: Optional[List[str]] = None,
+    ) -> Union[List[Dict[str, Any]], List[RecordType]]:
+        return await self.repo.get_all_denorm(
+            start_index, batch_size, field_names, relationships
+        )
 
     async def get_all(self, start_index: int, batch_size: int) -> List[RecordType]:
         return await self.repo.get_all(start_index, batch_size)

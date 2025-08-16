@@ -5,6 +5,7 @@ from app.database import Base
 from typing import Optional
 from app.core.config import get_settings
 from zoneinfo import ZoneInfo
+from app.core.enums import PaymentFrequency, AmortizationType
 
 
 class LoanType(Base):
@@ -16,8 +17,12 @@ class LoanType(Base):
     term_months: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Changed from String -> Integer (reference to config)
-    payment_frequency: Mapped[int] = mapped_column(Integer, nullable=False)
-    amortization_type: Mapped[int] = mapped_column(Integer, nullable=False)
+    payment_frequency: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=PaymentFrequency.MONTHLY
+    )
+    amortization_type: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=AmortizationType.EQUAL_INSTALLMENTS
+    )
 
     grace_period_months: Mapped[int] = mapped_column(Integer, default=0)
     penalty_rate: Mapped[float] = mapped_column(Numeric(4, 2), default=0.0)
