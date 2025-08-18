@@ -25,7 +25,7 @@ class LoanTypeBase(BaseModel):
 
 
 class LoanTypeCreate(LoanTypeBase):
-    created_by_id: int = Field(..., description="ID of the user creating the loan type")
+    created_by_id: int = 0
 
 
 class LoanTypeUpdate(BaseModel):

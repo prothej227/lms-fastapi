@@ -1,7 +1,14 @@
 from enum import Enum
 from typing import Type, List
 
-
+class BaseEnum(Enum):
+    @classmethod
+    def from_str(cls, name: str):
+        try:
+            return cls[name]
+        except KeyError:
+            raise ValueError(f"{cls.__name__} does not have a member named '{name}'")
+        
 class PaymentFrequency(Enum):
     MONTHLY = 1
     QUARTERLY = 2

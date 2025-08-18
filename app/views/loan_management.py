@@ -17,18 +17,20 @@ loan_router = APIRouter(prefix="/loan", tags=["Loan Management"])
     "/create/loan-type", response_model=schemas.loan_type.LoanTypeResponse
 )
 async def create_loan_type_endpoint(
-    loan_type_data: schemas.loan_type.LoanTypeCreate,
+    loan_type_data: schemas.loan_type.LoanTypeBase,
     current_user: UserView = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> schemas.loan_type.LoanTypeResponse:
 
     service = services.LoanTypeService(db)
-    loan_type_data = loan_type_data.model_copy(
-        update={"created_by_id": current_user.id if current_user.id else -1}
+
+    loan_type_create = schemas.loan_type.LoanTypeCreate(
+        **loan_type_data.model_dump(),
+        created_by_id=current_user.id if current_user.id else -1,
     )
 
     try:
-        loan_type = await service.create(loan_type_data)
+        loan_type = await service.create(loan_type_create)
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -79,18 +81,20 @@ async def get_all_loan_types_endpoint(
 
 @loan_router.post("/create/loan", response_model=schemas.loan.LoanView)
 async def create_loan_endpoint(
-    loan_data: schemas.loan.LoanCreate,
+    loan_data: schemas.loan.LoanBase,
     _current_user: UserView = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> schemas.loan.LoanView:
 
     service = services.LoanService(db)
-    loan_data = loan_data.model_copy(
-        update={"created_by_id": _current_user.id if _current_user.id else -1}
+    loan_data_create = schemas.loan.LoanCreate(
+        **loan_data.model_dump(),
+        created_by_id=_current_user.id if _current_user.id else -1,
+        modified_by_id=_current_user.id if _current_user.id else -1,
     )
 
     try:
-        loan = await service.create(loan_data)
+        loan = await service.create(loan_data_create)
     except IntegrityError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -105,7 +109,14 @@ async def create_loan_endpoint(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to create loan."
         )
-    return schemas.loan.LoanView.model_validate(loan)
+    return schemas.loan.LoanView.model_validate(
+        {
+            **loan.__dict__,
+            "created_by_name": _current_user.full_name,
+            "modified_by_name": None,
+            "loan_type_name": None,
+        }
+    )
 
 
 @loan_router.get("/get-all/loan", response_model=List[schemas.loan.LoanView])
@@ -120,8 +131,9 @@ async def get_all_loans_endpoint(
 
     try:
         all_loans = await service.get_all_denorm(
-            start_index, batch_size, ["created_by", "modified_by", "loan_type"]
+            start_index, batch_size, relationships=["created_by", "modified_by", "loan_type"]
         )
+        print(all_loans)  # Debugging line to check fetched loans
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

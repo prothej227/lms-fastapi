@@ -15,10 +15,9 @@ class LoanBase(BaseModel):
     total_interest: condecimal(max_digits=10, decimal_places=2) = Field(default=0.00, example="0.00")  # type: ignore
     total_paid: condecimal(max_digits=10, decimal_places=2) = Field(default=0.00, example="0.00")  # type: ignore
     description: Optional[str] = Field(default=None, example="Monthly personal loan")  # type: ignore
-
+    loan_type_id: int = Field(..., example=1)
 
 class LoanCreate(LoanBase):
-    loan_type_id: int = Field(..., example=1)  # type: ignore
     created_by_id: int
     modified_by_id: Optional[int]
 
@@ -55,7 +54,8 @@ class LoanView(LoanBase):
             interest_rate=loan.interest_rate,
             start_date=loan.start_date,
             end_date=loan.end_date,
-            loan_type_name=f"{loan.loan_type.name}",
+            loan_type_id=loan.loan_type_id,
+            loan_type_name=loan.loan_type.name,
             status=loan.status,
             outstanding_balance=loan.outstanding_balance,
             total_interest=loan.total_interest,
