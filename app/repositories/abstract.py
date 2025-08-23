@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.types import RecordType
 from sqlalchemy.orm import joinedload
+from sqlalchemy import func
 
 
 class AbstractAsyncRepository(ABC, Generic[RecordType]):
@@ -64,10 +65,8 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         """
 
         if field_names:
-            # Select only specified columns
             query = select(*(getattr(self.model, field) for field in field_names))
         else:
-            # Select the full model
             query = select(self.model)
 
         if relationships:
@@ -78,11 +77,10 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         result = await self.db.execute(query.offset(start_index).limit(batch_size))
 
         if field_names:
-            # Return list of dicts: [{field1: val1, field2: val2}, ...]
             rows = result.all()
             return [dict(zip(field_names, row)) for row in rows]
         else:
-            # Return list of ORM objects
+
             return list(result.scalars().all())
 
     async def update(self, obj: RecordType) -> RecordType:
@@ -90,3 +88,7 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         await self.db.commit()
         await self.db.refresh(merged)
         return merged
+
+    async def count_all(self) -> int:
+        result = await self.db.execute(select(func.count()).select_from(self.model))
+        return result.scalar_one()

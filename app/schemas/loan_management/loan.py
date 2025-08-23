@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, ConfigDict, condecimal
 from datetime import datetime, date
 from typing import Optional
 from app.models import Loan
+from app.core import enums
 
 
 class LoanBase(BaseModel):
@@ -15,7 +16,8 @@ class LoanBase(BaseModel):
     total_interest: condecimal(max_digits=10, decimal_places=2) = Field(default=0.00, example="0.00")  # type: ignore
     total_paid: condecimal(max_digits=10, decimal_places=2) = Field(default=0.00, example="0.00")  # type: ignore
     description: Optional[str] = Field(default=None, example="Monthly personal loan")  # type: ignore
-    loan_type_id: int = Field(..., example=1)
+    loan_type_id: int = Field(..., example=1)  # type: ignore
+
 
 class LoanCreate(LoanBase):
     created_by_id: int
@@ -38,6 +40,7 @@ class LoanUpdate(BaseModel):
 
 class LoanView(LoanBase):
     id: int
+    status: str | int = ""
     loan_type_name: Optional[str]
     created_by_name: Optional[str]
     modified_by_name: Optional[str]
@@ -56,7 +59,11 @@ class LoanView(LoanBase):
             end_date=loan.end_date,
             loan_type_id=loan.loan_type_id,
             loan_type_name=loan.loan_type.name,
-            status=loan.status,
+            status=(
+                enums.LoanStatus(loan.status).get_proper_name()
+                if loan.status is not None
+                else ""
+            ),
             outstanding_balance=loan.outstanding_balance,
             total_interest=loan.total_interest,
             total_paid=loan.total_paid,

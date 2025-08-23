@@ -1,7 +1,12 @@
-from typing import Type, Generic, List, Optional, Any, Union, Dict
+from typing import Type, Generic, List, Optional, Any, Union, Dict, TypedDict
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.repositories.abstract import AbstractAsyncRepository
 from app.core.types import RecordType, CreateSchemaType, UpdateSchemaType
+
+
+class LoanTypeGetAllWithCount(TypedDict):
+    total_count: int
+    records: Any
 
 
 class CrudService(Generic[RecordType, CreateSchemaType, UpdateSchemaType]):
@@ -36,6 +41,22 @@ class CrudService(Generic[RecordType, CreateSchemaType, UpdateSchemaType]):
 
     async def get_by_field(self, field: str, value: Any) -> Optional[RecordType]:
         return await self.repo.get_by_field(field, value)
+
+    async def count_all(self) -> int:
+        return await self.repo.count_all()
+
+    async def get_all_denorm_with_count(
+        self,
+        start_index: int,
+        batch_size: int,
+        field_names: Optional[List[str]] = None,
+        relationships: Optional[List[str]] = None,
+    ) -> LoanTypeGetAllWithCount:
+        records = await self.repo.get_all_denorm(
+            start_index, batch_size, field_names, relationships
+        )
+        total_count = await self.repo.count_all()
+        return {"total_count": total_count, "records": records}
 
     async def get_all_denorm(
         self,

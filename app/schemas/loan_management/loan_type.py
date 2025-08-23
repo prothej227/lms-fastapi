@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, List
 from app.models.loan_type import LoanType
 from app.utils.helpers import get_enum_label
 from app.core.enums import PaymentFrequency, AmortizationType
@@ -108,6 +108,11 @@ class LoanTypeResponse(LoanTypeBase):
             created_at=loan_type.created_at,
             modified_at=loan_type.modified_at,
         )
+
+
+class LoanTypeResponseWithCount(BaseModel):
+    total_count: int
+    records: List[LoanTypeResponse]
 
 
 class LoanTypeFilter(BaseModel):

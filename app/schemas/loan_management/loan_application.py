@@ -5,6 +5,8 @@ from typing import Optional
 from pydantic import BaseModel, Field, ConfigDict
 from app.models.loan import LoanStatus
 from app.core.config import get_settings
+from app.models import LoanApplication
+from app.core.enums import LoanApplicationStatus
 
 
 class LoanApplicationBase(BaseModel):
@@ -35,5 +37,35 @@ class LoanApplicationUpdate(BaseModel):
 class LoanApplicationView(LoanApplicationBase):
     id: int = Field(..., examples=[1001])
     loan_id: Optional[int] = Field(None, examples=[2000])
-
+    loan_type_name: Optional[str] = Field("", examples=["Personal Loan"])
+    member_name: Optional[str] = Field(default="Unknown Member", examples=["John Doe"])
     model_config = ConfigDict(from_attributes=True)
+    status: str | int = Field("Unknown Status")
+
+    @classmethod
+    def from_orm_with_names(
+        cls, loan_application: LoanApplication
+    ) -> "LoanApplicationView":
+        return cls(
+            id=loan_application.id,
+            member_id=loan_application.member_id,
+            member_name=(
+                loan_application.member.name
+                if loan_application.member
+                else "Unknown Member"
+            ),
+            loan_type_id=loan_application.loan_type_id,
+            amount_requested=loan_application.amount_requested,
+            loan_type_name=(
+                loan_application.loan_type.name
+                if loan_application.loan_type
+                else "Unknown Loan Type"
+            ),
+            application_date=loan_application.application_date,
+            status=(
+                LoanApplicationStatus(loan_application.status).get_proper_name()
+                if loan_application.status
+                else "Unknown Status"
+            ),
+            loan_id=loan_application.loan_id,
+        )

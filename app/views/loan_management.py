@@ -5,7 +5,7 @@ from app.views import APIRouter, Depends, HTTPException
 from app.database import get_db
 from app.services.auth import get_current_user
 from app.schemas.user import UserView
-from typing import List
+from typing import List, Dict
 from app.core.config import get_settings
 from app.services import loan_management as services
 from app.schemas import loan_management as schemas
@@ -52,19 +52,19 @@ async def create_loan_type_endpoint(
 
 
 @loan_router.get(
-    "/get-all/loan-type", response_model=List[schemas.loan_type.LoanTypeResponse]
+    "/get-all/loan-type", response_model=schemas.loan_type.LoanTypeResponseWithCount
 )
 async def get_all_loan_types_endpoint(
     start_index: int = 0,
     batch_size: int = get_settings().sqlalchemy_default_batch_size,
     _current_user: UserView = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> List[schemas.loan_type.LoanTypeResponse]:
+) -> schemas.loan_type.LoanTypeResponseWithCount:
 
     service = services.LoanTypeService(db)
 
     try:
-        all_loan_types = await service.get_all_denorm(
+        all_loan_types = await service.get_all_denorm_with_count(
             start_index, batch_size, relationships=["created_by", "modified_by"]
         )
     except Exception as e:
@@ -73,10 +73,13 @@ async def get_all_loan_types_endpoint(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch loan type"
         )
-    return [
-        schemas.loan_type.LoanTypeResponse.from_orm_with_names(lt)
-        for lt in all_loan_types
-    ]
+    return schemas.loan_type.LoanTypeResponseWithCount(
+        total_count=all_loan_types["total_count"],
+        records=[
+            schemas.loan_type.LoanTypeResponse.from_orm_with_names(lt)
+            for lt in all_loan_types["records"]
+        ],
+    )
 
 
 @loan_router.post("/create/loan", response_model=schemas.loan.LoanView)
@@ -131,7 +134,9 @@ async def get_all_loans_endpoint(
 
     try:
         all_loans = await service.get_all_denorm(
-            start_index, batch_size, relationships=["created_by", "modified_by", "loan_type"]
+            start_index,
+            batch_size,
+            relationships=["created_by", "modified_by", "loan_type"],
         )
         print(all_loans)  # Debugging line to check fetched loans
     except Exception:
@@ -186,7 +191,9 @@ async def get_all_loan_applications_endpoint(
     service = services.LoanApplicationService(db)
 
     try:
-        all_loans = await service.get_all(start_index, batch_size)
+        all_loans = await service.get_all_denorm(
+            start_index, batch_size, relationships=["member", "loan_type"]
+        )
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -198,6 +205,6 @@ async def get_all_loan_applications_endpoint(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch loans."
         )
     return [
-        schemas.loan_application.LoanApplicationView.model_validate(loan)
+        schemas.loan_application.LoanApplicationView.from_orm_with_names(loan)
         for loan in all_loans
     ]
