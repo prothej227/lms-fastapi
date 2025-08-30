@@ -19,7 +19,7 @@ class LoanApplication(Base):
         Integer, ForeignKey("loan_types.id"), nullable=False
     )
     amount_requested: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-    application_date: Mapped[DateTime] = mapped_column(
+    application_date: Mapped[datetime] = mapped_column(
         DateTime,
         default=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
         nullable=False,
