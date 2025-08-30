@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.types import RecordType
 from sqlalchemy.orm import joinedload
-from sqlalchemy import func
+from sqlalchemy import and_, func
 
 
 class AbstractAsyncRepository(ABC, Generic[RecordType]):
@@ -53,6 +53,7 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         batch_size: int,
         field_names: Optional[List[str]] = None,
         relationships: Optional[List[str]] = None,
+        filters: Optional[Dict[str, Any]] = None,
     ) -> Union[List[Dict[str, Any]], List[RecordType]]:
         """
         Get all denormalized records from the defined relationships.
@@ -62,6 +63,7 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
             batch_size (int): The number of data you want to obtain, or simply the page size.
             field_names (List[str], optional): Specific field names to select.
             relationships (List[str], optional): Relationships to join-load.
+            filters (Dict[str, Any], optional): Filtering conditions {field: value}.
         """
 
         if field_names:
@@ -74,7 +76,23 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
                 *(joinedload(getattr(self.model, rel)) for rel in relationships)
             )
 
-        result = await self.db.execute(query.offset(start_index).limit(batch_size))
+        if filters:
+            conditions = []
+
+            for field, value in filters.items():
+                col = getattr(self.model, field, None)
+                if col is not None and value is not None:
+                    if isinstance(value, str):
+                        conditions.append(col.ilike(f"%{value}%"))
+                    else:
+                        conditions.append(col == value)
+
+            if conditions:
+                query = query.where(and_(*conditions))
+
+        query = query.offset(start_index).limit(batch_size)
+
+        result = await self.db.execute(query)
 
         if field_names:
             rows = result.all()
@@ -89,6 +107,22 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         await self.db.refresh(merged)
         return merged
 
-    async def count_all(self) -> int:
-        result = await self.db.execute(select(func.count()).select_from(self.model))
+    async def count_all(self, filters: Optional[Dict[str, Any]] = None) -> int:
+        query = select(func.count()).select_from(self.model)
+
+        if filters:
+            conditions = []
+            for field, value in filters.items():
+                col = getattr(self.model, field, None)
+                if col is not None and value is not None:
+                    if isinstance(value, str):
+                        # case-insensitive partial match
+                        conditions.append(col.ilike(f"%{value}%"))
+                    else:
+                        conditions.append(col == value)
+
+            if conditions:
+                query = query.where(and_(*conditions))
+
+        result = await self.db.execute(query)
         return result.scalar_one()

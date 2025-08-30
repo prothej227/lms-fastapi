@@ -115,6 +115,11 @@ class LoanTypeResponseWithCount(BaseModel):
     records: List[LoanTypeResponse]
 
 
+class LoanTypeRequestFilters(BaseModel):
+    name: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
 class LoanTypeFilter(BaseModel):
     label: str
     value: int

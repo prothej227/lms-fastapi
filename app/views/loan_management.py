@@ -5,7 +5,7 @@ from app.views import APIRouter, Depends, HTTPException
 from app.database import get_db
 from app.services.auth import get_current_user
 from app.schemas.user import UserView
-from typing import List, Dict
+from typing import List, Dict, Optional, Any
 from app.core.config import get_settings
 from app.services import loan_management as services
 from app.schemas import loan_management as schemas
@@ -59,13 +59,17 @@ async def get_all_loan_types_endpoint(
     batch_size: int = get_settings().sqlalchemy_default_batch_size,
     _current_user: UserView = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    filters: schemas.loan_type.LoanTypeRequestFilters = Depends(),
 ) -> schemas.loan_type.LoanTypeResponseWithCount:
 
     service = services.LoanTypeService(db)
 
     try:
         all_loan_types = await service.get_all_denorm_with_count(
-            start_index, batch_size, relationships=["created_by", "modified_by"]
+            start_index,
+            batch_size,
+            relationships=["created_by", "modified_by"],
+            filters=filters.model_dump(exclude_none=True),
         )
     except Exception as e:
         raise HTTPException(detail=str(e), status_code=status.HTTP_404_NOT_FOUND)
@@ -122,23 +126,25 @@ async def create_loan_endpoint(
     )
 
 
-@loan_router.get("/get-all/loan", response_model=List[schemas.loan.LoanView])
+@loan_router.get("/get-all/loan", response_model=schemas.loan.LoanResponseWithCount)
 async def get_all_loans_endpoint(
     start_index: int = 0,
     batch_size: int = get_settings().sqlalchemy_default_batch_size,
     _current_user: UserView = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> List[schemas.loan.LoanView]:
+    filters: schemas.loan.LoanRequestFilters = Depends(),
+) -> schemas.loan.LoanResponseWithCount:
 
     service = services.LoanService(db)
 
     try:
-        all_loans = await service.get_all_denorm(
+        all_loans = await service.get_all_denorm_with_count(
             start_index,
             batch_size,
             relationships=["created_by", "modified_by", "loan_type"],
+            filters=filters.model_dump(exclude_none=True),
         )
-        print(all_loans)  # Debugging line to check fetched loans
+
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -149,7 +155,13 @@ async def get_all_loans_endpoint(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch loans."
         )
-    return [schemas.loan.LoanView.from_orm_with_names(loan) for loan in all_loans]
+    return schemas.loan.LoanResponseWithCount(
+        total_count=all_loans["total_count"],
+        records=[
+            schemas.loan.LoanView.from_orm_with_names(loan)
+            for loan in all_loans["records"]
+        ],
+    )
 
 
 @loan_router.post(
@@ -179,20 +191,24 @@ async def create_loan_application_endpoint(
 
 @loan_router.get(
     "/get-all/loan-application",
-    response_model=List[schemas.loan_application.LoanApplicationView],
+    response_model=schemas.loan_application.LoanApplicationResponseWithCount,
 )
 async def get_all_loan_applications_endpoint(
     start_index: int = 0,
     batch_size: int = get_settings().sqlalchemy_default_batch_size,
     _current_user: UserView = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> List[schemas.loan_application.LoanApplicationView]:
+    filters: schemas.loan_application.LoanApplicationRequestFilters = Depends(),
+) -> schemas.loan_application.LoanApplicationResponseWithCount:
 
     service = services.LoanApplicationService(db)
 
     try:
-        all_loans = await service.get_all_denorm(
-            start_index, batch_size, relationships=["member", "loan_type"]
+        all_loans = await service.get_all_denorm_with_count(
+            start_index,
+            batch_size,
+            relationships=["member", "loan_type"],
+            filters=filters.model_dump(exclude_none=True),
         )
     except Exception:
         raise HTTPException(
@@ -204,7 +220,10 @@ async def get_all_loan_applications_endpoint(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch loans."
         )
-    return [
-        schemas.loan_application.LoanApplicationView.from_orm_with_names(loan)
-        for loan in all_loans
-    ]
+    return schemas.loan_application.LoanApplicationResponseWithCount(
+        total_count=all_loans["total_count"],
+        records=[
+            schemas.loan_application.LoanApplicationView.from_orm_with_names(loan)
+            for loan in all_loans["records"]
+        ],
+    )

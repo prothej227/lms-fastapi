@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, ConfigDict, condecimal
 from datetime import datetime, date
-from typing import Optional
+from typing import Optional, List
 from app.models import Loan
 from app.core import enums
 
@@ -11,7 +11,7 @@ class LoanBase(BaseModel):
     interest_rate: condecimal(max_digits=4, decimal_places=2) = Field(..., example="5.25")  # type: ignore
     start_date: date = Field(..., example="2025-08-01")  # type: ignore
     end_date: date = Field(..., example="2026-08-01")  # type: ignore
-    status: Optional[int] = Field(default=0, example=0)  # type: ignore
+    status: Optional[int] = Field(default=enums.LoanStatus.PENDING)  # type: ignore
     outstanding_balance: condecimal(max_digits=10, decimal_places=2) = Field(..., example="10000.00")  # type: ignore
     total_interest: condecimal(max_digits=10, decimal_places=2) = Field(default=0.00, example="0.00")  # type: ignore
     total_paid: condecimal(max_digits=10, decimal_places=2) = Field(default=0.00, example="0.00")  # type: ignore
@@ -81,3 +81,12 @@ class LoanView(LoanBase):
             created_at=loan.created_at,
             modified_at=loan.modified_at,
         )
+
+
+class LoanRequestFilters(BaseModel):
+    status: Optional[int] = None
+
+
+class LoanResponseWithCount(BaseModel):
+    total_count: int
+    records: List[LoanView]

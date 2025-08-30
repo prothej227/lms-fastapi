@@ -4,7 +4,7 @@ from app.repositories.abstract import AbstractAsyncRepository
 from app.core.types import RecordType, CreateSchemaType, UpdateSchemaType
 
 
-class LoanTypeGetAllWithCount(TypedDict):
+class RecordResponseWithCount(TypedDict):
     total_count: int
     records: Any
 
@@ -51,11 +51,12 @@ class CrudService(Generic[RecordType, CreateSchemaType, UpdateSchemaType]):
         batch_size: int,
         field_names: Optional[List[str]] = None,
         relationships: Optional[List[str]] = None,
-    ) -> LoanTypeGetAllWithCount:
+        filters: Optional[Dict[str, Any]] = None,
+    ) -> RecordResponseWithCount:
         records = await self.repo.get_all_denorm(
-            start_index, batch_size, field_names, relationships
+            start_index, batch_size, field_names, relationships, filters
         )
-        total_count = await self.repo.count_all()
+        total_count = await self.repo.count_all(filters=filters)
         return {"total_count": total_count, "records": records}
 
     async def get_all_denorm(
@@ -64,9 +65,10 @@ class CrudService(Generic[RecordType, CreateSchemaType, UpdateSchemaType]):
         batch_size: int,
         field_names: Optional[List[str]] = None,
         relationships: Optional[List[str]] = None,
+        filters: Optional[Dict[str, Any]] = None,
     ) -> Union[List[Dict[str, Any]], List[RecordType]]:
         return await self.repo.get_all_denorm(
-            start_index, batch_size, field_names, relationships
+            start_index, batch_size, field_names, relationships, filters
         )
 
     async def get_all(self, start_index: int, batch_size: int) -> List[RecordType]:

@@ -1,7 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, Field, ConfigDict
 from app.models.loan import LoanStatus
 from app.core.config import get_settings
@@ -32,6 +32,10 @@ class LoanApplicationUpdate(BaseModel):
     )
     status: Optional[int] = Field(None, examples=[2])
     loan_id: Optional[int] = Field(None, examples=[2001])
+
+
+class LoanApplicationRequestFilters(BaseModel):
+    status: Optional[int] = None
 
 
 class LoanApplicationView(LoanApplicationBase):
@@ -69,3 +73,8 @@ class LoanApplicationView(LoanApplicationBase):
             ),
             loan_id=loan_application.loan_id,
         )
+
+
+class LoanApplicationResponseWithCount(BaseModel):
+    total_count: int
+    records: List[LoanApplicationView]

@@ -81,5 +81,8 @@ async def get_filter_map(
         )
 
     return await service.get_all_denorm(
-        start_index=0, batch_size=5000, field_names=config["field_names"]
+        start_index=0,
+        batch_size=5000,
+        field_names=config["field_names"],
+        filters={"is_active": True},
     )
