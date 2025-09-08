@@ -39,6 +39,38 @@ async def create_member_endpoint(
 
 
 @record_router.get(
+    "/get-all/member", response_model=schemas.member.MemberResponseWithCount
+)
+async def get_all_members_endpoint(
+    current_user: UserView = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    start_index: int = 0,
+    batch_size=get_settings().sqlalchemy_default_batch_size,
+    filters: schemas.member.MemberRequestFilters = Depends(),
+) -> schemas.member.MemberResponseWithCount:
+    service = services.member.MemberService(db)
+    try:
+        all_members = await service.get_all_denorm_with_count(
+            start_index,
+            batch_size,
+            relationships=["created_by", "modified_by"],
+            filters=filters.model_dump(exclude_none=True) if filters else {},
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve members.",
+        )
+    return schemas.member.MemberResponseWithCount(
+        total_count=all_members["total_count"],
+        records=[
+            schemas.member.MemberView.from_orm_with_names(item)
+            for item in all_members["records"]
+        ],
+    )
+
+
+@record_router.get(
     "/get-all/beneficiary", response_model=List[schemas.beneficiary.BeneficiaryView]
 )
 async def get_all_beneficiaries_endpoint(
@@ -56,3 +88,21 @@ async def get_all_beneficiaries_endpoint(
         schemas.beneficiary.BeneficiaryView.model_validate(item)
         for item in beneficiaries
     ]
+
+
+@record_router.get("/get/member/{member_id}", response_model=schemas.member.MemberView)
+async def get_member_by_id_endpoint(
+    member_id: int,
+    current_user: UserView = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> schemas.member.MemberView:
+    service = services.member.MemberService(db)
+    member = await service.get_by_id(
+        member_id, relationships=["created_by", "modified_by"]
+    )
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Member with ID {member_id} not found.",
+        )
+    return schemas.member.MemberView.from_orm_with_names(member)

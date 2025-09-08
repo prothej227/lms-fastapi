@@ -35,12 +35,16 @@ class CrudService(Generic[RecordType, CreateSchemaType, UpdateSchemaType]):
         obj = self.model(**create_data.model_dump())
         return await self.repo.create(obj)
 
-    async def update(self, update_data: UpdateSchemaType) -> RecordType:
-        obj = self.model(**update_data.model_dump())
-        return await self.repo.update(obj)
+    async def update(self, id: int, update_data: UpdateSchemaType) -> RecordType:
+        return await self.repo.update(id, update_data.model_dump(exclude_unset=True))
 
     async def get_by_field(self, field: str, value: Any) -> Optional[RecordType]:
         return await self.repo.get_by_field(field, value)
+
+    async def get_by_id(
+        self, id: int, relationships: Optional[List[str]] = None
+    ) -> Optional[RecordType]:
+        return await self.repo.get_by_id(id, relationships=relationships)
 
     async def count_all(self) -> int:
         return await self.repo.count_all()

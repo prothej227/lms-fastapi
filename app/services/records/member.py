@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Member, Beneficiary
 from app.repositories.records.member import MemberRepository
 from typing import List
+from datetime import date, datetime
 
 
 class MemberService(
@@ -19,11 +20,29 @@ class MemberService(
 
         member = Member(**data)
 
-        for b_data in beneficiaries_data:
-            beneficiary = Beneficiary(**b_data)
-            member.beneficiaries.append(beneficiary)
+        beneficiaries = [
+            Beneficiary(**b_data, member=member)  # or member_id=member.id in repo
+            for b_data in beneficiaries_data or []
+        ]
+        member.beneficiaries = beneficiaries
 
         return await self.repo.create(member)
+
+    async def is_member(
+        self,
+        member_id: int,
+        member_first_name: str,
+        member_last_name: str,
+        member_dob: date,
+    ) -> bool:
+        return await self.repo.exists(
+            id=member_id,
+            otherFieldQueries={
+                "first_name": member_first_name,
+                "last_name": member_last_name,
+                "dob": member_dob,
+            },
+        )
 
     async def get_all_beneficiaries(
         self, start_index: int, batch_size: int, member_id: int

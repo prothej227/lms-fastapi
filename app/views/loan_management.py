@@ -9,6 +9,7 @@ from typing import List, Dict, Optional, Any
 from app.core.config import get_settings
 from app.services import loan_management as services
 from app.schemas import loan_management as schemas
+from app.services import records as record_services
 
 loan_router = APIRouter(prefix="/loan", tags=["Loan Management"])
 
@@ -169,16 +170,38 @@ async def get_all_loans_endpoint(
     response_model=schemas.loan_application.LoanApplicationView,
 )
 async def create_loan_application_endpoint(
-    loan_application_data: schemas.loan_application.LoanApplicationCreate,
+    loan_application_form: schemas.loan_application.LoanApplicationCreateForm,
     db: AsyncSession = Depends(get_db),
 ):
     service = services.LoanApplicationService(db)
+    member_service = record_services.member.MemberService(db)
+
+    is_member = await member_service.is_member(
+        member_id=loan_application_form.member_id,
+        member_first_name=loan_application_form.member_first_name,
+        member_last_name=loan_application_form.member_last_name,
+        member_dob=loan_application_form.member_dob,
+    )
+
+    if not is_member:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Given credentials don't exist in our records.",
+        )
+
     try:
-        loan_application = await service.create(loan_application_data)
-    except Exception:
+        loan_application = await service.create(
+            schemas.loan_application.LoanApplicationCreate(
+                member_id=loan_application_form.member_id,
+                amount_requested=loan_application_form.amount_requested,
+                application_date=loan_application_form.application_date,
+                loan_type_id=loan_application_form.loan_type_id,
+            )
+        )
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Faield to create loan application. Server error occured",
+            detail=f"Failed to create loan application. Server error occurred: {str(e)}",
         )
 
     if loan_application is None:
@@ -227,3 +250,32 @@ async def get_all_loan_applications_endpoint(
             for loan in all_loans["records"]
         ],
     )
+
+
+@loan_router.patch(
+    "/update/loan-application/{loan_application_id}",
+    response_model=schemas.loan_application.LoanApplicationView,
+)
+async def update_loan_application_endpoint(
+    loan_application_id: int,
+    loan_application_form: schemas.loan_application.LoanApplicationUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    service = services.LoanApplicationService(db)
+
+    try:
+        loan_application = await service.update(
+            loan_application_id, loan_application_form
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update loan application. Server error occurred: {str(e)}",
+        )
+
+    if loan_application is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No loan application updated. Request error occurred.",
+        )
+    return schemas.loan_application.LoanApplicationView.model_validate(loan_application)

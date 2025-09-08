@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from dataclasses import fields
 from typing import Generic, Type, List, Optional, Union, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -27,8 +28,15 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
             await self.db.rollback()
             raise e
 
-    async def get_by_id(self, id: int) -> Optional[RecordType]:
-        result = await self.db.execute(select(self.model).filter(self.model.id == id))
+    async def get_by_id(
+        self, id: int, relationships: Optional[List[str]] = None
+    ) -> Optional[RecordType]:
+        query = select(self.model).filter(self.model.id == id)
+        if relationships:
+            query = query.options(
+                *(joinedload(getattr(self.model, rel)) for rel in relationships)
+            )
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_by_field(self, field: str, value) -> Optional[RecordType]:
@@ -101,11 +109,20 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
 
             return list(result.scalars().all())
 
-    async def update(self, obj: RecordType) -> RecordType:
-        merged = await self.db.merge(obj)
+    async def update(self, id: int, update_data: dict) -> RecordType:
+        if id is None or update_data is None:
+            raise ValueError("Invalid id or object.")
+
+        existing = await self.get_by_id(id)
+        if not existing:
+            raise ValueError(f"Record with id {id} does not exist.")
+
+        for key, value in update_data.items():
+            setattr(existing, key, value)
+
         await self.db.commit()
-        await self.db.refresh(merged)
-        return merged
+        await self.db.refresh(existing)
+        return existing
 
     async def count_all(self, filters: Optional[Dict[str, Any]] = None) -> int:
         query = select(func.count()).select_from(self.model)
@@ -126,3 +143,15 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
 
         result = await self.db.execute(query)
         return result.scalar_one()
+
+    async def exists(
+        self, id: int, otherFieldQueries: Optional[Dict[str, Any]] = None
+    ) -> bool:
+        query = select(func.count()).select_from(self.model).filter(self.model.id == id)
+
+        if otherFieldQueries:
+            for field, value in otherFieldQueries.items():
+                query = query.filter(getattr(self.model, field) == value)
+
+        result = await self.db.execute(query)
+        return result.scalar_one() > 0
