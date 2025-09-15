@@ -17,6 +17,22 @@ class BaseEnum(Enum):
         return self.name.replace("_", " ").title()
 
 
+class LoanActivityType(BaseEnum):
+    DISBURSEMENT = 1  # Loan Drawdown / Disbursement
+    PAYMENT = 2  # Payment
+    PENALTY = 3  # Penalty
+    INTEREST = 4  # Interest
+    ADJUSTMENT = 5  # Adjustment
+    WRITE_OFF = 6  # Write-Off
+
+
+class LoanActivityStatus(BaseEnum):
+    PENDING = 1
+    APPROVED = 2
+    REJECTED = 3
+    POSTED = 4
+
+
 class PaymentFrequency(BaseEnum):
     MONTHLY = 1
     QUARTERLY = 2

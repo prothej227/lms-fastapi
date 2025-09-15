@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import Member, Beneficiary
 from app.repositories.records.member import MemberRepository
 from typing import List
-from datetime import date, datetime
+from datetime import date
 
 
 class MemberService(

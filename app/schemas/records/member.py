@@ -89,6 +89,11 @@ class MemberUpdate(BaseModel):
     modified_by_id: Optional[int] = Field(None, examples=[2])
 
 
+class MemberCreateResponseView(BaseModel):
+    message: str = Field(..., examples=["Member created successfully."])
+    member_id: int = Field(..., examples=[101])
+
+
 class MemberView(MemberBase):
     id: int = Field(..., examples=[101])
     created_by: str = ""

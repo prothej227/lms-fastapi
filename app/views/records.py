@@ -13,12 +13,14 @@ from app.core.config import get_settings
 record_router = APIRouter(prefix="/record", tags=["Master Records"])
 
 
-@record_router.post("/create/member", response_model=schemas.member.MemberView)
+@record_router.post(
+    "/create/member", response_model=schemas.member.MemberCreateResponseView
+)
 async def create_member_endpoint(
     member_create_data: schemas.member.MemberCreate,
     current_user: UserView = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-) -> schemas.member.MemberView:
+) -> schemas.member.MemberCreateResponseView:
 
     service = services.member.MemberService(db)
     member_create_data = member_create_data.model_copy(
@@ -35,7 +37,9 @@ async def create_member_endpoint(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Failed creating member."
         )
-    return schemas.member.MemberView.model_validate(member)
+    return schemas.member.MemberCreateResponseView(
+        message="Member created successfully.", member_id=member.id
+    )
 
 
 @record_router.get(
@@ -106,3 +110,49 @@ async def get_member_by_id_endpoint(
             detail=f"Member with ID {member_id} not found.",
         )
     return schemas.member.MemberView.from_orm_with_names(member)
+
+
+@record_router.post(
+    "/create/loan-activity", response_model=schemas.loan_activity.LoanActivityRead
+)
+async def create_loan_activity_endpoint(
+    loan_activity_data: schemas.loan_activity.LoanActivityCreate,
+    current_user: UserView = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> schemas.loan_activity.LoanActivityRead:
+    service = services.loan_activity.LoanActivityService(db)
+    loan_activity = await service.create(loan_activity_data)
+    if not loan_activity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to create loan activity.",
+        )
+    return schemas.loan_activity.LoanActivityRead.model_validate(loan_activity)
+
+
+@record_router.get(
+    "/get-all/loan-activity",
+    response_model=schemas.loan_activity.LoanActivityResponseWithCount,
+)
+async def get_all_loan_activity_endpoint(
+    current_user: UserView = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    start_index: int = 0,
+    batch_size=get_settings().sqlalchemy_default_batch_size,
+) -> schemas.loan_activity.LoanActivityResponseWithCount:
+
+    service = services.loan_activity.LoanActivityService(db)
+    loan_activities = await service.get_all_denorm_with_count(start_index, batch_size)
+
+    return schemas.loan_activity.LoanActivityResponseWithCount(
+        total_count=loan_activities["total_count"],
+        records=[
+            schemas.loan_activity.LoanActivityRead.model_validate(record)
+            for record in loan_activities["records"]
+        ],
+    )
+
+
+# @record_router.post(
+#     "/post-payment"
+# )
