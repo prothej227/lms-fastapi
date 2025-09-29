@@ -96,6 +96,7 @@ class MemberCreateResponseView(BaseModel):
 
 class MemberView(MemberBase):
     id: int = Field(..., examples=[101])
+    member_id: str
     created_by: str = ""
     created_at: datetime = Field(..., examples=["2025-08-10T10:30:00Z"])
     modified_by: str = ""
@@ -107,6 +108,7 @@ class MemberView(MemberBase):
     def from_orm_with_names(cls, member: Member) -> "MemberView":
         return cls(
             id=member.id,
+            member_id=member.member_id,
             first_name=member.first_name,
             middle_name=member.middle_name,
             last_name=member.last_name,

@@ -7,7 +7,7 @@ from app.core.enums import LoanActivityType, LoanActivityStatus
 
 class LoanActivityBase(BaseModel):
     loan_id: int
-    loan_activity_code: str
+    member_id: str = Field(..., description="Member ID of the payee")
     activity_type: int = Field(
         ...,
         description="Type of loan activity (1=Disbursement, 2=Payment, 3=Penalty, 4=Interest, 5=Adjustment, 6=Write-Off)",
@@ -55,6 +55,7 @@ class LoanActivityUpdate(BaseModel):
 
 class LoanActivityRead(LoanActivityBase):
     id: int
+    loan_activity_code: str
     created_at: datetime
     approved_by: Optional[int] = None
     approved_at: Optional[datetime] = None

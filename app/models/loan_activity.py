@@ -1,11 +1,11 @@
-from sqlalchemy import Enum, Integer, Numeric, String, DateTime, ForeignKey
+from sqlalchemy import Integer, Numeric, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from datetime import datetime
 from app.database import Base
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 from app.core.config import get_settings
-from app.core.enums import LoanActivityType, LoanActivityStatus
+from app.core.enums import LoanActivityStatus
 import uuid
 
 
@@ -80,12 +80,13 @@ class LoanActivity(Base):
     is_posted: Mapped[bool] = mapped_column(default=False, nullable=False)
     notes: Mapped[str] = mapped_column(String(255), nullable=True)
     reference_number: Mapped[str] = mapped_column(String(100), nullable=True)
-    member_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("members.id"), nullable=False
+    member_id: Mapped[str] = mapped_column(
+        String(16), ForeignKey("members.member_id"), nullable=False
     )
 
     # Relationships
     loan = relationship("Loan", back_populates="loan_activities")
+    member = relationship("Member", foreign_keys=[member_id])
 
     def __repr__(self):
         return f"<LoanActivity {self.activity_type} on Loan {self.loan_id}>"

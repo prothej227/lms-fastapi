@@ -6,12 +6,17 @@ from app.models.beneficiary import Beneficiary
 from typing import List
 from zoneinfo import ZoneInfo
 from app.core.config import get_settings
+from datetime import date
+from app.utils.helpers import generate_member_id
 
 
 class Member(Base):
     __tablename__ = "members"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    member_id: Mapped[str] = mapped_column(
+        String(16), unique=True, index=True, nullable=False, default=generate_member_id
+    )
     first_name: Mapped[str] = mapped_column(String(255))
     middle_name: Mapped[str] = mapped_column(String(255))
     last_name: Mapped[str] = mapped_column(String(255))
