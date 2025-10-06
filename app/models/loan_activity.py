@@ -6,11 +6,7 @@ from decimal import Decimal
 from zoneinfo import ZoneInfo
 from app.core.config import get_settings
 from app.core.enums import LoanActivityStatus
-import uuid
-
-
-def generate_code() -> str:
-    return f"LA-{uuid.uuid4().hex[:8].upper()}"
+from app.utils.helpers import generate_code
 
 
 class LoanActivity(Base):

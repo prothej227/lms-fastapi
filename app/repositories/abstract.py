@@ -4,8 +4,9 @@ from typing import Generic, Type, List, Optional, Union, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.types import RecordType
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload, RelationshipProperty
 from sqlalchemy import and_, func
+from sqlalchemy.inspection import inspect
 
 
 class AbstractAsyncRepository(ABC, Generic[RecordType]):
@@ -33,9 +34,20 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
     ) -> Optional[RecordType]:
         query = select(self.model).filter(self.model.id == id)
         if relationships:
-            query = query.options(
-                *(joinedload(getattr(self.model, rel)) for rel in relationships)
-            )
+            opts = []
+            mapper = inspect(self.model)
+            for rel in relationships:
+                rel_prop: RelationshipProperty = mapper.relationships[rel]
+
+                if rel_prop.uselist:
+                    # 1-to-many → selectinload to avoid duplicates
+                    opts.append(selectinload(getattr(self.model, rel)))
+                else:
+                    # many-to-one or one-to-one → joinedload for efficiency
+                    opts.append(joinedload(getattr(self.model, rel)))
+
+            query = query.options(*opts)
+
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
 

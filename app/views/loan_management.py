@@ -279,3 +279,29 @@ async def update_loan_application_endpoint(
             detail="No loan application updated. Request error occurred.",
         )
     return schemas.loan_application.LoanApplicationView.model_validate(loan_application)
+
+
+@loan_router.get("/get/schedule/{loan_id}", response_model=List[dict])
+async def get_loan_amortization_schedule(
+    loan_id: int,
+    db: AsyncSession = Depends(get_db),
+    _current_user: UserView = Depends(get_current_user),
+) -> List[dict]:
+
+    service = services.LoanService(db)
+
+    try:
+        schedule = await service.create_amortization_schedule(loan_id)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create amortization schedule. Server error occurred: {str(e)}",
+        )
+
+    if schedule is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Loan schedule is not generated. Request error occurred.",
+        )
+    return schedule
