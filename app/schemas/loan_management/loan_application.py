@@ -10,7 +10,7 @@ from app.core.enums import LoanApplicationStatus
 
 
 class LoanApplicationBase(BaseModel):
-    member_id: int = Field(..., examples=[101])
+    member_id: str = Field(..., examples=[101])
     loan_type_id: int = Field(..., examples=[5])
     amount_requested: Decimal = Field(..., examples=["50000.00"])
     application_date: Optional[datetime] = Field(

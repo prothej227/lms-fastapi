@@ -157,12 +157,21 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
         return result.scalar_one()
 
     async def exists(
-        self, id: int, otherFieldQueries: Optional[Dict[str, Any]] = None
+        self,
+        pk_config: dict[str, Any],
+        other_field_queries: Optional[Dict[str, Any]] = None,
     ) -> bool:
-        query = select(func.count()).select_from(self.model).filter(self.model.id == id)
+        """Check if data exists"""
+        query = (
+            select(func.count())
+            .select_from(self.model)
+            .filter(
+                getattr(self.model, pk_config["fieldName"]) == pk_config["fieldValue"]
+            )
+        )
 
-        if otherFieldQueries:
-            for field, value in otherFieldQueries.items():
+        if other_field_queries:
+            for field, value in other_field_queries.items():
                 query = query.filter(getattr(self.model, field) == value)
 
         result = await self.db.execute(query)

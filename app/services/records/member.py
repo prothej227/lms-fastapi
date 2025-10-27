@@ -30,14 +30,14 @@ class MemberService(
 
     async def is_member(
         self,
-        member_id: int,
+        member_id: int | str,
         member_first_name: str,
         member_last_name: str,
         member_dob: date,
     ) -> bool:
         return await self.repo.exists(
-            id=member_id,
-            otherFieldQueries={
+            pk_config={"fieldName": "member_id", "fieldValue": member_id},
+            other_field_queries={
                 "first_name": member_first_name,
                 "last_name": member_last_name,
                 "dob": member_dob,

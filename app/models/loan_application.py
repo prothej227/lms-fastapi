@@ -12,8 +12,8 @@ class LoanApplication(Base):
     __tablename__ = "loan_applications"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    member_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("members.id"), nullable=False
+    member_id: Mapped[str] = mapped_column(
+        Integer, ForeignKey("members.member_id"), nullable=False
     )
     loan_type_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("loan_types.id"), nullable=False

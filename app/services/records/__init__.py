@@ -1,2 +1,2 @@
-from .member import Member
-from .loan_activity import LoanActivity
+from .member import Member, MemberService
+from .loan_activity import LoanActivity, LoanActivityService

@@ -67,3 +67,7 @@ class LoanActivityRead(LoanActivityBase):
 class LoanActivityResponseWithCount(BaseModel):
     total_count: int
     records: List[LoanActivityRead]
+
+
+class LoanActivityRequestFilters(BaseModel):
+    member_id: Optional[str] = None

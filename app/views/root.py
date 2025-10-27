@@ -1,6 +1,5 @@
 from app.views import APIRouter, status
 
-
 root_router = APIRouter(tags=["Root"])
 
 

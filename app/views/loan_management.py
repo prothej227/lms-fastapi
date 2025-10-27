@@ -238,11 +238,6 @@ async def get_all_loan_applications_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="A server error occured.",
         )
-
-    if all_loans is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Failed to fetch loans."
-        )
     return schemas.loan_application.LoanApplicationResponseWithCount(
         total_count=all_loans["total_count"],
         records=[

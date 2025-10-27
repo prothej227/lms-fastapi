@@ -139,10 +139,15 @@ async def get_all_loan_activity_endpoint(
     db: AsyncSession = Depends(get_db),
     start_index: int = 0,
     batch_size=get_settings().sqlalchemy_default_batch_size,
+    filters: schemas.loan_activity.LoanActivityRequestFilters = Depends(),
 ) -> schemas.loan_activity.LoanActivityResponseWithCount:
 
     service = services.loan_activity.LoanActivityService(db)
-    loan_activities = await service.get_all_denorm_with_count(start_index, batch_size)
+    loan_activities = await service.get_all_denorm_with_count(
+        start_index,
+        batch_size,
+        filters=filters.model_dump(exclude_none=True) if filters else {},
+    )
 
     return schemas.loan_activity.LoanActivityResponseWithCount(
         total_count=loan_activities["total_count"],
@@ -151,8 +156,3 @@ async def get_all_loan_activity_endpoint(
             for record in loan_activities["records"]
         ],
     )
-
-
-# @record_router.post(
-#     "/post-payment"
-# )
