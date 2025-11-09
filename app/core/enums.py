@@ -18,12 +18,12 @@ class BaseEnum(Enum):
 
 
 class LoanActivityType(BaseEnum):
-    DISBURSEMENT = 1  # Loan Drawdown / Disbursement
-    PAYMENT = 2  # Payment
-    PENALTY = 3  # Penalty
-    INTEREST = 4  # Interest
-    ADJUSTMENT = 5  # Adjustment
-    WRITE_OFF = 6  # Write-Off
+    DISBURSEMENT = 1
+    PAYMENT = 2
+    PENALTY = 3
+    INTEREST = 4
+    ADJUSTMENT = 5
+    WRITE_OFF = 6
 
 
 class LoanActivityStatus(BaseEnum):

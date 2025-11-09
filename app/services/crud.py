@@ -49,6 +49,9 @@ class CrudService(Generic[RecordType, CreateSchemaType, UpdateSchemaType]):
     async def count_all(self) -> int:
         return await self.repo.count_all()
 
+    async def count_all_filtered(self, filters: Dict[str, Any]) -> int:
+        return await self.repo.count_all(filters=filters)
+
     async def get_all_denorm_with_count(
         self,
         start_index: int,

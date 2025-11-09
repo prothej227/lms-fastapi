@@ -34,8 +34,6 @@ class LoanService(CrudService[Loan, schemas.loan.LoanCreate, schemas.loan.LoanUp
             raise ValueError("Invalid loan term. End date must be after start date.")
 
         monthly_rate = (annual_rate / 100) / 12
-        print(print(f"Annual rate: {annual_rate}"))
-        print(f"Monthly rate: {monthly_rate}")
         if monthly_rate > 0:
             monthly_payment = (
                 principal
