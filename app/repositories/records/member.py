@@ -1,6 +1,6 @@
 from app.repositories.abstract import AbstractAsyncRepository
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models import Member, Beneficiary
+from app.models import Member, Beneficiary, LoanActivity
 from sqlalchemy.future import select
 from typing import List, Type
 
@@ -39,6 +39,17 @@ class MemberRepository(AbstractAsyncRepository[Member]):
         result = await self.db.execute(
             select(Beneficiary)
             .filter(Beneficiary.member_id == member_id)
+            .offset(start_index)
+            .limit(batch_size)
+        )
+        return list(result.scalars().all())
+
+    async def get_all_loan_activities(
+        self, start_index: int, batch_size: int, member_id: int
+    ) -> List[LoanActivity]:
+        result = await self.db.execute(
+            select(LoanActivity)
+            .filter(LoanActivity.member_id == member_id)
             .offset(start_index)
             .limit(batch_size)
         )

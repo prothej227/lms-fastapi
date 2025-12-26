@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, date
 from zoneinfo import ZoneInfo
 from decimal import Decimal
 from typing import Optional, List
@@ -10,17 +10,23 @@ from app.core.enums import LoanApplicationStatus
 
 
 class LoanApplicationBase(BaseModel):
-    member_id: int = Field(..., examples=[101])
+    member_id: str = Field(..., examples=[101])
     loan_type_id: int = Field(..., examples=[5])
     amount_requested: Decimal = Field(..., examples=["50000.00"])
     application_date: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(ZoneInfo(get_settings().timezone)),
     )
-    status: int = Field(..., examples=[LoanStatus.FOR_APPROVAL])
+    # status: int = Field(..., examples=[LoanStatus.FOR_APPROVAL])
 
 
 class LoanApplicationCreate(LoanApplicationBase):
     pass
+
+
+class LoanApplicationCreateForm(LoanApplicationBase):
+    member_first_name: str = Field(..., examples=["Jane"])
+    member_last_name: str = Field(..., examples=["Doe"])
+    member_dob: date
 
 
 class LoanApplicationUpdate(BaseModel):
@@ -54,8 +60,9 @@ class LoanApplicationView(LoanApplicationBase):
             id=loan_application.id,
             member_id=loan_application.member_id,
             member_name=(
-                loan_application.member.name
-                if loan_application.member
+                f"{loan_application.member.first_name} {loan_application.member.last_name}"
+                if loan_application.member.first_name
+                and loan_application.member.last_name
                 else "Unknown Member"
             ),
             loan_type_id=loan_application.loan_type_id,

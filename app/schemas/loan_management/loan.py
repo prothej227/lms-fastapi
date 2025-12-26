@@ -85,6 +85,7 @@ class LoanView(LoanBase):
 
 class LoanRequestFilters(BaseModel):
     status: Optional[int] = None
+    member_id: Optional[int] = None
 
 
 class LoanResponseWithCount(BaseModel):

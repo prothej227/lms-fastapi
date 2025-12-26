@@ -2,7 +2,7 @@ from sqlalchemy import Integer, Numeric, DateTime, ForeignKey
 from sqlalchemy.orm import relationship, mapped_column, Mapped
 from datetime import datetime, timezone
 from app.database import Base
-from app.models.loan import LoanStatus
+from app.core.enums import LoanApplicationStatus
 from decimal import Decimal
 from app.core.config import get_settings
 from zoneinfo import ZoneInfo
@@ -12,8 +12,8 @@ class LoanApplication(Base):
     __tablename__ = "loan_applications"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    member_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("members.id"), nullable=False
+    member_id: Mapped[str] = mapped_column(
+        Integer, ForeignKey("members.member_id"), nullable=False
     )
     loan_type_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("loan_types.id"), nullable=False
@@ -25,7 +25,7 @@ class LoanApplication(Base):
         nullable=False,
     )
     status: Mapped[int] = mapped_column(
-        Integer, nullable=False, default=LoanStatus.FOR_APPROVAL
+        Integer, nullable=False, default=LoanApplicationStatus.SUBMITTED.value
     )
     loan_id: Mapped[int] = mapped_column(Integer, ForeignKey("loans.id"), nullable=True)
 

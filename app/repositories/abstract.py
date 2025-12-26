@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
+from dataclasses import fields
 from typing import Generic, Type, List, Optional, Union, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.core.types import RecordType
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload, RelationshipProperty
 from sqlalchemy import and_, func
+from sqlalchemy.inspection import inspect
 
 
 class AbstractAsyncRepository(ABC, Generic[RecordType]):
@@ -27,8 +29,26 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
             await self.db.rollback()
             raise e
 
-    async def get_by_id(self, id: int) -> Optional[RecordType]:
-        result = await self.db.execute(select(self.model).filter(self.model.id == id))
+    async def get_by_id(
+        self, id: int, relationships: Optional[List[str]] = None
+    ) -> Optional[RecordType]:
+        query = select(self.model).filter(self.model.id == id)
+        if relationships:
+            opts = []
+            mapper = inspect(self.model)
+            for rel in relationships:
+                rel_prop: RelationshipProperty = mapper.relationships[rel]
+
+                if rel_prop.uselist:
+                    # 1-to-many → selectinload to avoid duplicates
+                    opts.append(selectinload(getattr(self.model, rel)))
+                else:
+                    # many-to-one or one-to-one → joinedload for efficiency
+                    opts.append(joinedload(getattr(self.model, rel)))
+
+            query = query.options(*opts)
+
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_by_field(self, field: str, value) -> Optional[RecordType]:
@@ -101,11 +121,20 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
 
             return list(result.scalars().all())
 
-    async def update(self, obj: RecordType) -> RecordType:
-        merged = await self.db.merge(obj)
+    async def update(self, id: int, update_data: dict) -> RecordType:
+        if id is None or update_data is None:
+            raise ValueError("Invalid id or object.")
+
+        existing = await self.get_by_id(id)
+        if not existing:
+            raise ValueError(f"Record with id {id} does not exist.")
+
+        for key, value in update_data.items():
+            setattr(existing, key, value)
+
         await self.db.commit()
-        await self.db.refresh(merged)
-        return merged
+        await self.db.refresh(existing)
+        return existing
 
     async def count_all(self, filters: Optional[Dict[str, Any]] = None) -> int:
         query = select(func.count()).select_from(self.model)
@@ -126,3 +155,24 @@ class AbstractAsyncRepository(ABC, Generic[RecordType]):
 
         result = await self.db.execute(query)
         return result.scalar_one()
+
+    async def exists(
+        self,
+        pk_config: dict[str, Any],
+        other_field_queries: Optional[Dict[str, Any]] = None,
+    ) -> bool:
+        """Check if data exists"""
+        query = (
+            select(func.count())
+            .select_from(self.model)
+            .filter(
+                getattr(self.model, pk_config["fieldName"]) == pk_config["fieldValue"]
+            )
+        )
+
+        if other_field_queries:
+            for field, value in other_field_queries.items():
+                query = query.filter(getattr(self.model, field) == value)
+
+        result = await self.db.execute(query)
+        return result.scalar_one() > 0

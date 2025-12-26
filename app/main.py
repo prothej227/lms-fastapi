@@ -6,6 +6,7 @@ from app.views.routers import (
     loan_router,
     record_router,
     utils_router,
+    dashboard_router,
 )
 from app.core.config import get_settings
 from contextlib import asynccontextmanager
@@ -38,3 +39,4 @@ app.include_router(root_router)
 app.include_router(loan_router)
 app.include_router(record_router)
 app.include_router(utils_router)
+app.include_router(dashboard_router)
